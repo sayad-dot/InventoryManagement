@@ -23,6 +23,10 @@ namespace InventoryManagement.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // New fields for home page display
+        public int ItemCount { get; set; }
+        public string? ImageUrl { get; set; }
+
         // Navigation properties
         public ICollection<Item> Items { get; set; } = new List<Item>();
     }

@@ -29,6 +29,8 @@ namespace InventoryManagement.Data
                 .WithMany(inv => inv.Items)
                 .HasForeignKey(i => i.InventoryId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // REMOVED the HasData seed method - we'll handle seeding differently
         }
     }
 }
