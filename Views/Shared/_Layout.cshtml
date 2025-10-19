@@ -20,23 +20,24 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Profile" asp-action="Index">My Profile</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">My Inventories</a>
-                            </li>
-                        }
-                    </ul>
+<ul class="navbar-nav me-auto">
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    </li>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Profile" asp-action="Index">My Profile</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Inventory" asp-action="MyInventories">My Inventories</a>
+        </li>
+    }
+</ul>
                     <ul class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)
                         {

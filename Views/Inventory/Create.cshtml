@@ -1,0 +1,67 @@
+@model InventoryManagement.ViewModels.CreateInventoryViewModel
+@{
+    ViewData["Title"] = "Create Inventory";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">Create New Inventory</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label"></label>
+                        <input asp-for="Title" class="form-control" placeholder="Enter inventory title" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe what this inventory will be used for"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="CategoryId" class="form-label"></label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(Model.AvailableCategories, "Id", "Name"))">
+                            <option value="">Select a category</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="TagsInput" class="form-label"></label>
+                        <input asp-for="TagsInput" class="form-control" placeholder="e.g., office, equipment, electronics" />
+                        <div class="form-text">Enter tags separated by commas. These will help users find your inventory.</div>
+                        <span asp-validation-for="TagsInput" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="ImageUrl" class="form-label"></label>
+                        <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input asp-for="IsPublic" class="form-check-input" />
+                        <label asp-for="IsPublic" class="form-check-label"></label>
+                        <div class="form-text">If public, all authenticated users can add items to this inventory.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="MyInventories" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Inventory</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

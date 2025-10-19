@@ -1,0 +1,257 @@
+@model InventoryManagement.ViewModels.EditInventoryViewModel
+@{
+    ViewData["Title"] = "Inventory Settings - " + Model.Title;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Inventory Settings - @Model.Title</h4>
+                    <div>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-light btn-sm">Back to Inventory</a>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
+                            Basic Info
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="fields-tab" data-bs-toggle="tab" data-bs-target="#fields" type="button" role="tab">
+                            Custom Fields
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button" role="tab">
+                            Access Control
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="settingsTabsContent">
+                    <!-- Basic Info Tab -->
+                    <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                        <div class="card-body">
+                            <form method="post" asp-action="UpdateBasicSettings">
+                                <input type="hidden" asp-for="Id" />
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Title" class="form-label"></label>
+                                    <input asp-for="Title" class="form-control" />
+                                    <span asp-validation-for="Title" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Description" class="form-label"></label>
+                                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="CategoryId" class="form-label"></label>
+                                    <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(Model.AvailableCategories, "Id", "Name"))">
+                                        <option value="">Select a category</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="ImageUrl" class="form-label"></label>
+                                    <input asp-for="ImageUrl" class="form-control" />
+                                    <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input asp-for="IsPublic" class="form-check-input" />
+                                    <label asp-for="IsPublic" class="form-check-label">Make this inventory public (all authenticated users can add items)</label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Custom Fields Tab -->
+                    <div class="tab-pane fade" id="fields" role="tabpanel">
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h5>Manage Custom Fields</h5>
+                                <p class="text-muted">Define the data fields for items in this inventory. You can have up to 3 fields of each type.</p>
+                            </div>
+
+                            <form method="post" asp-action="UpdateCustomFields" id="customFieldsForm">
+                                <input type="hidden" asp-for="Id" />
+                                <input type="hidden" id="FieldOrder" name="FieldOrder" value="@Model.FieldOrder" />
+
+                                <div id="customFieldsContainer">
+                                    <!-- Fields will be populated by JavaScript -->
+                                </div>
+
+                                <!-- Available Field Types -->
+                                <div class="mb-4">
+                                    <h6>Add New Field Type:</h6>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('string')">
+                                            <i class="fas fa-font"></i> Single-line Text
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('text')">
+                                            <i class="fas fa-align-left"></i> Multi-line Text
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('number')">
+                                            <i class="fas fa-hashtag"></i> Number
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('bool')">
+                                            <i class="fas fa-toggle-on"></i> True/False
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('file')">
+                                            <i class="fas fa-file"></i> File/Image URL
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Save Field Configuration</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Access Control Tab -->
+                    <div class="tab-pane fade" id="access" role="tabpanel">
+                        <div class="card-body">
+                            <h5>Access Control</h5>
+                            <p class="text-muted">Manage who can add items to this inventory.</p>
+                            <!-- Will be implemented in Phase 4 -->
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Access control features will be available in the next update.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Field management JavaScript
+        let fieldCounter = 0;
+        const fieldTypes = {
+            'string': { icon: 'fa-font', max: 3, current: 0 },
+            'text': { icon: 'fa-align-left', max: 3, current: 0 },
+            'number': { icon: 'fa-hashtag', max: 3, current: 0 },
+            'bool': { icon: 'fa-toggle-on', max: 3, current: 0 },
+            'file': { icon: 'fa-file', max: 3, current: 0 }
+        };
+
+        function addField(type) {
+            if (fieldTypes[type].current >= fieldTypes[type].max) {
+                alert(`You can only have ${fieldTypes[type].max} ${type} fields.`);
+                return;
+            }
+
+            fieldCounter++;
+            fieldTypes[type].current++;
+
+            const fieldId = `${type}_${fieldCounter}`;
+            const fieldHtml = `
+                <div class="card mb-3 field-item" data-field-type="${type}" data-field-id="${fieldId}">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas ${fieldTypes[type].icon} me-2"></i>
+                            <strong>${getTypeDisplayName(type)} Field</strong>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="moveFieldUp(this)">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="moveFieldDown(this)">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeField(this, '${type}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Field Name</label>
+                                    <input type="text" class="form-control" name="CustomFields[${fieldCounter}].Name" 
+                                           placeholder="Enter field name (e.g., 'Model', 'Price')" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Field Type</label>
+                                    <input type="text" class="form-control" value="${getTypeDisplayName(type)}" readonly>
+                                    <input type="hidden" name="CustomFields[${fieldCounter}].Type" value="${type}">
+                                    <input type="hidden" name="CustomFields[${fieldCounter}].Index" value="${fieldTypes[type].current}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="CustomFields[${fieldCounter}].IsActive" checked>
+                            <label class="form-check-label">Enable this field</label>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('customFieldsContainer').insertAdjacentHTML('beforeend', fieldHtml);
+            updateFieldOrder();
+        }
+
+        function getTypeDisplayName(type) {
+            const names = {
+                'string': 'Single-line Text',
+                'text': 'Multi-line Text',
+                'number': 'Number',
+                'bool': 'True/False',
+                'file': 'File/Image URL'
+            };
+            return names[type] || type;
+        }
+
+        function removeField(button, type) {
+            const card = button.closest('.field-item');
+            card.remove();
+            fieldTypes[type].current--;
+            updateFieldOrder();
+        }
+
+        function moveFieldUp(button) {
+            const card = button.closest('.field-item');
+            const prevCard = card.previousElementSibling;
+            if (prevCard) {
+                card.parentNode.insertBefore(card, prevCard);
+                updateFieldOrder();
+            }
+        }
+
+        function moveFieldDown(button) {
+            const card = button.closest('.field-item');
+            const nextCard = card.nextElementSibling;
+            if (nextCard) {
+                card.parentNode.insertBefore(nextCard, card);
+                updateFieldOrder();
+            }
+        }
+
+        function updateFieldOrder() {
+            const fields = document.querySelectorAll('.field-item');
+            const order = Array.from(fields).map(field => field.getAttribute('data-field-id'));
+            document.getElementById('FieldOrder').value = order.join(',');
+        }
+
+        // Initialize existing fields from model
+        document.addEventListener('DOMContentLoaded', function() {
+            // This would be populated from server-side data
+            // For now, we'll start with an empty state
+        });
+    </script>
+}

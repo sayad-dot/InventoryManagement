@@ -1,0 +1,144 @@
+@model InventoryManagement.ViewModels.InventoryViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">@Model.Title</h4>
+                        <div>
+                            @if (Model.IsOwner)
+                            {
+                                <a href="#" class="btn btn-outline-primary btn-sm">Edit</a>
+                            }
+                            <a asp-action="MyInventories" class="btn btn-outline-secondary btn-sm">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="card-text">@Model.Description</p>
+                            
+                            <div class="mb-3">
+                                @if (!string.IsNullOrEmpty(Model.CategoryName))
+                                {
+                                    <strong>Category:</strong> <span class="badge bg-info">@Model.CategoryName</span>
+                                }
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Tags:</strong>
+                                @foreach (var tag in Model.Tags)
+                                {
+                                    <span class="badge bg-secondary me-1">@tag</span>
+                                }
+                            </div>
+                            
+                            <div class="row text-muted">
+                                <div class="col-sm-6">
+                                    <small><strong>Created:</strong> @Model.CreatedAt.ToString("MMMM dd, yyyy")</small>
+                                </div>
+                                <div class="col-sm-6">
+                                    <small><strong>Updated:</strong> @Model.UpdatedAt.ToString("MMMM dd, yyyy")</small>
+                                </div>
+                                <div class="col-sm-6">
+                                    <small><strong>Items:</strong> @Model.ItemCount</small>
+                                </div>
+                                <div class="col-sm-6">
+                                    <small><strong>Access:</strong> @(Model.IsPublic ? "Public" : "Private")</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <img src="@Model.ImageUrl" class="img-fluid rounded" alt="@Model.Title" style="max-height: 200px;">
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs for Inventory Management -->
+            <ul class="nav nav-tabs mt-4" id="inventoryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab">Items</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="discussion-tab" data-bs-toggle="tab" data-bs-target="#discussion" type="button" role="tab">Discussion</button>
+                </li>
+                @if (Model.IsOwner)
+                {
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">Settings</button>
+                    </li>
+                }
+            </ul>
+            <div class="tab-content" id="inventoryTabsContent">
+                <div class="tab-pane fade show active" id="items" role="tabpanel">
+                    <div class="card border-top-0">
+                        <div class="card-body">
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5>No items yet</h5>
+                                <p class="text-muted">Start by adding items to this inventory.</p>
+                                <a href="#" class="btn btn-primary">Add Item</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="discussion" role="tabpanel">
+                    <div class="card border-top-0">
+                        <div class="card-body">
+                            <div class="text-center py-4">
+                                <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                <h5>No discussions yet</h5>
+                                <p class="text-muted">Start a conversation about this inventory.</p>
+                                <a href="#" class="btn btn-primary">Start Discussion</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @if (Model.IsOwner)
+                {
+                    <div class="tab-pane fade" id="settings" role="tabpanel">
+                        <div class="card border-top-0">
+                            <div class="card-body">
+                                <h5>Inventory Settings</h5>
+                                <p>Manage your inventory settings, custom fields, and access control.</p>
+                                <a href="#" class="btn btn-outline-primary">Manage Settings</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">About the Creator</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-user fa-2x text-white"></i>
+                    </div>
+                    <h6>@Model.CreatorName</h6>
+                    <p class="text-muted">Inventory Owner</p>
+                    <a href="#" class="btn btn-outline-info btn-sm">View Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -12,7 +12,7 @@ namespace InventoryManagement.Models
         public int InventoryId { get; set; }
 
         [Required]
-        public string UserId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty; // Changed to string to match IdentityUser
 
         public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
 
