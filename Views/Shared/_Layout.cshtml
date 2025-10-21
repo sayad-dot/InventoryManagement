@@ -30,11 +30,26 @@
 
     @if (User.Identity.IsAuthenticated)
     {
-        <li class="nav-item">
-            <a class="nav-link" asp-controller="Profile" asp-action="Index">My Profile</a>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-boxes me-1"></i> Inventories
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="inventoryDropdown">
+                <li><a class="dropdown-item" asp-controller="Inventory" asp-action="MyInventories">
+                    <i class="fas fa-list me-2"></i>My Inventories
+                </a></li>
+                <li><a class="dropdown-item" asp-controller="Inventory" asp-action="Create">
+                    <i class="fas fa-plus me-2"></i>Create New Inventory
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Quick Access</h6></li>
+                <!-- Future enhancement: Recent inventories could be listed here -->
+            </ul>
         </li>
         <li class="nav-item">
-            <a class="nav-link" asp-controller="Inventory" asp-action="MyInventories">My Inventories</a>
+            <a class="nav-link" asp-controller="Profile" asp-action="Index">
+                <i class="fas fa-user me-1"></i> My Profile
+            </a>
         </li>
     }
 </ul>

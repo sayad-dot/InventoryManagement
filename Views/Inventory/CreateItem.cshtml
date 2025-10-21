@@ -1,0 +1,150 @@
+@model InventoryManagement.ViewModels.CreateItemViewModel
+@{
+    ViewData["Title"] = $"Add New Item - {Model.InventoryTitle}";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-plus me-2"></i>Add New Item to @Model.InventoryTitle
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="CreateItem">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="InventoryId" />
+                        
+                        <div class="mb-3">
+                            <label asp-for="CustomId" class="form-label">Custom ID (Optional)</label>
+                            <input asp-for="CustomId" class="form-control" placeholder="Enter a unique identifier for this item" />
+                            <span asp-validation-for="CustomId" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                This can be used to identify the item (e.g., barcode, SKU, serial number)
+                            </small>
+                        </div>
+                        
+                        <hr />
+                        
+                        @if (Model.CustomFields.Any())
+                        {
+                            <h5 class="mb-3">
+                                <i class="fas fa-list-ul me-2"></i>Custom Fields
+                            </h5>
+                            
+                            @for (int i = 0; i < Model.CustomFields.Count; i++)
+                            {
+                                var field = Model.CustomFields[i];
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        @field.Name
+                                        @if (field.IsRequired)
+                                        {
+                                            <span class="text-danger">*</span>
+                                        }
+                                    </label>
+                                    
+                                    @switch (field.Type)
+                                    {
+                                        case "string":
+                                            <input type="text" class="form-control" 
+                                                   name="CustomFields[@i].StringValue"
+                                                   value="@field.StringValue" 
+                                                   required="@field.IsRequired" />
+                                            <input type="hidden" name="CustomFields[@i].Type" value="@field.Type" />
+                                            <input type="hidden" name="CustomFields[@i].Index" value="@field.Index" />
+                                            <input type="hidden" name="CustomFields[@i].Name" value="@field.Name" />
+                                            <input type="hidden" name="CustomFields[@i].IsRequired" value="@field.IsRequired.ToString().ToLower()" />
+                                            break;
+                                            
+                                        case "text":
+                                            <textarea class="form-control" rows="3"
+                                                      name="CustomFields[@i].TextValue"
+                                                      required="@field.IsRequired">@field.TextValue</textarea>
+                                            <input type="hidden" name="CustomFields[@i].Type" value="@field.Type" />
+                                            <input type="hidden" name="CustomFields[@i].Index" value="@field.Index" />
+                                            <input type="hidden" name="CustomFields[@i].Name" value="@field.Name" />
+                                            <input type="hidden" name="CustomFields[@i].IsRequired" value="@field.IsRequired.ToString().ToLower()" />
+                                            break;
+                                            
+                                        case "number":
+                                            <input type="number" step="0.01" class="form-control"
+                                                   name="CustomFields[@i].NumberValue"
+                                                   value="@field.NumberValue"
+                                                   required="@field.IsRequired" />
+                                            <input type="hidden" name="CustomFields[@i].Type" value="@field.Type" />
+                                            <input type="hidden" name="CustomFields[@i].Index" value="@field.Index" />
+                                            <input type="hidden" name="CustomFields[@i].Name" value="@field.Name" />
+                                            <input type="hidden" name="CustomFields[@i].IsRequired" value="@field.IsRequired.ToString().ToLower()" />
+                                            break;
+                                            
+                                        case "bool":
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input"
+                                                       name="CustomFields[@i].BoolValue"
+                                                       value="true" @(field.BoolValue == true ? "checked" : "") />
+                                                <label class="form-check-label">Yes</label>
+                                                <input type="hidden" name="CustomFields[@i].Type" value="@field.Type" />
+                                                <input type="hidden" name="CustomFields[@i].Index" value="@field.Index" />
+                                                <input type="hidden" name="CustomFields[@i].Name" value="@field.Name" />
+                                                <input type="hidden" name="CustomFields[@i].IsRequired" value="@field.IsRequired.ToString().ToLower()" />
+                                            </div>
+                                            break;
+                                            
+                                        case "file":
+                                            <input type="url" class="form-control"
+                                                   name="CustomFields[@i].FileValue"
+                                                   value="@field.FileValue" 
+                                                   placeholder="https://example.com/file.pdf"
+                                                   required="@field.IsRequired" />
+                                            <small class="form-text text-muted">Enter a URL to a file</small>
+                                            <input type="hidden" name="CustomFields[@i].Type" value="@field.Type" />
+                                            <input type="hidden" name="CustomFields[@i].Index" value="@field.Index" />
+                                            <input type="hidden" name="CustomFields[@i].Name" value="@field.Name" />
+                                            <input type="hidden" name="CustomFields[@i].IsRequired" value="@field.IsRequired.ToString().ToLower()" />
+                                            break;
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(field.ValidationMessage))
+                                    {
+                                        <div class="text-danger">@field.ValidationMessage</div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No custom fields have been configured for this inventory. 
+                                You can still add items with just a Custom ID, or 
+                                <a asp-action="Settings" asp-route-id="@Model.InventoryId" class="alert-link">
+                                    configure custom fields
+                                </a> 
+                                to capture more detailed information.
+                            </div>
+                        }
+                        
+                        <hr />
+                        
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Items" asp-route-id="@Model.InventoryId" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>Add Item
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

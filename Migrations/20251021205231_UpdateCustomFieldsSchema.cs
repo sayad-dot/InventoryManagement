@@ -80,20 +80,7 @@ namespace InventoryManagement.Migrations
                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Items' AND column_name='Version') THEN
                         ALTER TABLE ""Items"" ADD COLUMN ""Version"" integer NOT NULL DEFAULT 1;
                     END IF;
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "CustomText3Value",
-                table: "Items",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<int>(
-                name: "Version",
-                table: "Items",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+                END $$");
 
             migrationBuilder.AddColumn<bool>(
                 name: "CustomBool1Active",
