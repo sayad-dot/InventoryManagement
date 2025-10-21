@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using InventoryManagement.Models;
 
 namespace InventoryManagement.ViewModels
 {
@@ -11,6 +12,7 @@ namespace InventoryManagement.ViewModels
         public string? Value { get; set; } // For display in forms
         public decimal? NumberValue { get; set; }
         public bool? BoolValue { get; set; }
+        public string? FileValue { get; set; }
     }
 
     public class InventorySettingsViewModel

@@ -55,7 +55,8 @@ namespace InventoryManagement.ViewModels
         public List<InventoryViewModel> OwnedInventories { get; set; } = new List<InventoryViewModel>();
         public List<InventoryViewModel> AccessibleInventories { get; set; } = new List<InventoryViewModel>();
     }
-        public class EditInventoryViewModel
+
+    public class EditInventoryViewModel
     {
         public int Id { get; set; }
 

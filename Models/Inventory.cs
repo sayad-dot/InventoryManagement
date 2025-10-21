@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InventoryManagement.Models
 {
-        public class Inventory
+    public class Inventory
     {
         [Key]
         public int Id { get; set; }
@@ -90,7 +90,6 @@ namespace InventoryManagement.Models
         public ICollection<InventoryAccess> AccessUsers { get; set; } = new List<InventoryAccess>();
         public ICollection<InventoryTag> InventoryTags { get; set; } = new List<InventoryTag>();
     }
-
 
     public class Category
     {

@@ -206,7 +206,7 @@ namespace InventoryManagement.Controllers
             var user = await _userManager.GetUserAsync(User);
             var isOwner = inventory.CreatorId == user?.Id;
             var hasAccess = isOwner || inventory.IsPublic || 
-                           await _context.InventoryAccesses.AnyAsync(ia => ia.InventoryId == id && ia.UserId == user.Id);
+                           (user != null && await _context.InventoryAccesses.AnyAsync(ia => ia.InventoryId == id && ia.UserId == user.Id));
 
             if (!hasAccess)
             {
@@ -231,6 +231,393 @@ namespace InventoryManagement.Controllers
             };
 
             return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Settings(int id)
+        {
+            var inventory = await _context.Inventories
+                .Include(i => i.Category)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (inventory.CreatorId != user?.Id && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            var viewModel = new EditInventoryViewModel
+            {
+                Id = inventory.Id,
+                Title = inventory.Title,
+                Description = inventory.Description,
+                CategoryId = inventory.CategoryId,
+                ImageUrl = inventory.ImageUrl,
+                IsPublic = inventory.IsPublic,
+                AvailableCategories = await _context.Categories.OrderBy(c => c.Name).ToListAsync(),
+                FieldOrder = inventory.FieldOrder ?? string.Empty
+            };
+
+            // Load custom fields from inventory
+            LoadCustomFieldsToViewModel(inventory, viewModel);
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateBasicSettings(EditInventoryViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.AvailableCategories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+                return View("Settings", model);
+            }
+
+            var inventory = await _context.Inventories.FindAsync(model.Id);
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (inventory.CreatorId != user?.Id && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            try
+            {
+                inventory.Title = model.Title;
+                inventory.Description = model.Description;
+                inventory.CategoryId = model.CategoryId;
+                inventory.ImageUrl = model.ImageUrl;
+                inventory.IsPublic = model.IsPublic;
+                inventory.UpdatedAt = DateTime.UtcNow;
+
+                _context.Inventories.Update(inventory);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Basic settings updated successfully!";
+                return RedirectToAction("Settings", new { id = model.Id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating inventory settings for inventory {InventoryId}", model.Id);
+                ModelState.AddModelError("", "An error occurred while updating the inventory. Please try again.");
+                model.AvailableCategories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+                return View("Settings", model);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateCustomFields(EditInventoryViewModel model)
+        {
+            var inventory = await _context.Inventories.FindAsync(model.Id);
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (inventory.CreatorId != user?.Id && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            try
+            {
+                // Update custom fields from view model
+                UpdateCustomFieldsFromViewModel(inventory, model);
+                
+                inventory.FieldOrder = model.FieldOrder;
+                inventory.UpdatedAt = DateTime.UtcNow;
+
+                _context.Inventories.Update(inventory);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Custom fields updated successfully!";
+                return RedirectToAction("Settings", new { id = model.Id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating custom fields for inventory {InventoryId}", model.Id);
+                ModelState.AddModelError("", "An error occurred while updating custom fields. Please try again.");
+                model.AvailableCategories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+                LoadCustomFieldsToViewModel(inventory, model);
+                return View("Settings", model);
+            }
+        }
+
+        private void LoadCustomFieldsToViewModel(Inventory inventory, EditInventoryViewModel viewModel)
+        {
+            // Single-line text fields
+            for (int i = 1; i <= 3; i++)
+            {
+                viewModel.CustomFields.Add(new CustomFieldViewModel
+                {
+                    Type = "string",
+                    Index = i,
+                    Name = GetCustomStringName(inventory, i) ?? string.Empty,
+                    IsActive = GetCustomStringActive(inventory, i)
+                });
+            }
+
+            // Multi-line text fields
+            for (int i = 1; i <= 3; i++)
+            {
+                viewModel.CustomFields.Add(new CustomFieldViewModel
+                {
+                    Type = "text",
+                    Index = i,
+                    Name = GetCustomTextName(inventory, i) ?? string.Empty,
+                    IsActive = GetCustomTextActive(inventory, i)
+                });
+            }
+
+            // Number fields
+            for (int i = 1; i <= 3; i++)
+            {
+                viewModel.CustomFields.Add(new CustomFieldViewModel
+                {
+                    Type = "number",
+                    Index = i,
+                    Name = GetCustomNumberName(inventory, i) ?? string.Empty,
+                    IsActive = GetCustomNumberActive(inventory, i)
+                });
+            }
+
+            // Boolean fields
+            for (int i = 1; i <= 3; i++)
+            {
+                viewModel.CustomFields.Add(new CustomFieldViewModel
+                {
+                    Type = "bool",
+                    Index = i,
+                    Name = GetCustomBoolName(inventory, i) ?? string.Empty,
+                    IsActive = GetCustomBoolActive(inventory, i)
+                });
+            }
+
+            // File fields
+            for (int i = 1; i <= 3; i++)
+            {
+                viewModel.CustomFields.Add(new CustomFieldViewModel
+                {
+                    Type = "file",
+                    Index = i,
+                    Name = GetCustomFileName(inventory, i) ?? string.Empty,
+                    IsActive = GetCustomFileActive(inventory, i)
+                });
+            }
+        }
+
+        private void UpdateCustomFieldsFromViewModel(Inventory inventory, EditInventoryViewModel model)
+        {
+            foreach (var field in model.CustomFields)
+            {
+                switch (field.Type)
+                {
+                    case "string":
+                        SetCustomStringField(inventory, field.Index, field.Name, field.IsActive);
+                        break;
+                    case "text":
+                        SetCustomTextField(inventory, field.Index, field.Name, field.IsActive);
+                        break;
+                    case "number":
+                        SetCustomNumberField(inventory, field.Index, field.Name, field.IsActive);
+                        break;
+                    case "bool":
+                        SetCustomBoolField(inventory, field.Index, field.Name, field.IsActive);
+                        break;
+                    case "file":
+                        SetCustomFileField(inventory, field.Index, field.Name, field.IsActive);
+                        break;
+                }
+            }
+        }
+
+        // Helper methods for getting custom field values
+        private string? GetCustomStringName(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomString1Name,
+            2 => inventory.CustomString2Name,
+            3 => inventory.CustomString3Name,
+            _ => null
+        };
+
+        private bool GetCustomStringActive(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomString1Active,
+            2 => inventory.CustomString2Active,
+            3 => inventory.CustomString3Active,
+            _ => false
+        };
+
+        private string? GetCustomTextName(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomText1Name,
+            2 => inventory.CustomText2Name,
+            3 => inventory.CustomText3Name,
+            _ => null
+        };
+
+        private bool GetCustomTextActive(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomText1Active,
+            2 => inventory.CustomText2Active,
+            3 => inventory.CustomText3Active,
+            _ => false
+        };
+
+        private string? GetCustomNumberName(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomNumber1Name,
+            2 => inventory.CustomNumber2Name,
+            3 => inventory.CustomNumber3Name,
+            _ => null
+        };
+
+        private bool GetCustomNumberActive(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomNumber1Active,
+            2 => inventory.CustomNumber2Active,
+            3 => inventory.CustomNumber3Active,
+            _ => false
+        };
+
+        private string? GetCustomBoolName(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomBool1Name,
+            2 => inventory.CustomBool2Name,
+            3 => inventory.CustomBool3Name,
+            _ => null
+        };
+
+        private bool GetCustomBoolActive(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomBool1Active,
+            2 => inventory.CustomBool2Active,
+            3 => inventory.CustomBool3Active,
+            _ => false
+        };
+
+        private string? GetCustomFileName(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomFile1Name,
+            2 => inventory.CustomFile2Name,
+            3 => inventory.CustomFile3Name,
+            _ => null
+        };
+
+        private bool GetCustomFileActive(Inventory inventory, int index) => index switch
+        {
+            1 => inventory.CustomFile1Active,
+            2 => inventory.CustomFile2Active,
+            3 => inventory.CustomFile3Active,
+            _ => false
+        };
+
+        // Helper methods for setting custom field values
+        private void SetCustomStringField(Inventory inventory, int index, string name, bool isActive)
+        {
+            switch (index)
+            {
+                case 1:
+                    inventory.CustomString1Name = name;
+                    inventory.CustomString1Active = isActive;
+                    break;
+                case 2:
+                    inventory.CustomString2Name = name;
+                    inventory.CustomString2Active = isActive;
+                    break;
+                case 3:
+                    inventory.CustomString3Name = name;
+                    inventory.CustomString3Active = isActive;
+                    break;
+            }
+        }
+
+        private void SetCustomTextField(Inventory inventory, int index, string name, bool isActive)
+        {
+            switch (index)
+            {
+                case 1:
+                    inventory.CustomText1Name = name;
+                    inventory.CustomText1Active = isActive;
+                    break;
+                case 2:
+                    inventory.CustomText2Name = name;
+                    inventory.CustomText2Active = isActive;
+                    break;
+                case 3:
+                    inventory.CustomText3Name = name;
+                    inventory.CustomText3Active = isActive;
+                    break;
+            }
+        }
+
+        private void SetCustomNumberField(Inventory inventory, int index, string name, bool isActive)
+        {
+            switch (index)
+            {
+                case 1:
+                    inventory.CustomNumber1Name = name;
+                    inventory.CustomNumber1Active = isActive;
+                    break;
+                case 2:
+                    inventory.CustomNumber2Name = name;
+                    inventory.CustomNumber2Active = isActive;
+                    break;
+                case 3:
+                    inventory.CustomNumber3Name = name;
+                    inventory.CustomNumber3Active = isActive;
+                    break;
+            }
+        }
+
+        private void SetCustomBoolField(Inventory inventory, int index, string name, bool isActive)
+        {
+            switch (index)
+            {
+                case 1:
+                    inventory.CustomBool1Name = name;
+                    inventory.CustomBool1Active = isActive;
+                    break;
+                case 2:
+                    inventory.CustomBool2Name = name;
+                    inventory.CustomBool2Active = isActive;
+                    break;
+                case 3:
+                    inventory.CustomBool3Name = name;
+                    inventory.CustomBool3Active = isActive;
+                    break;
+            }
+        }
+
+        private void SetCustomFileField(Inventory inventory, int index, string name, bool isActive)
+        {
+            switch (index)
+            {
+                case 1:
+                    inventory.CustomFile1Name = name;
+                    inventory.CustomFile1Active = isActive;
+                    break;
+                case 2:
+                    inventory.CustomFile2Name = name;
+                    inventory.CustomFile2Active = isActive;
+                    break;
+                case 3:
+                    inventory.CustomFile3Name = name;
+                    inventory.CustomFile3Active = isActive;
+                    break;
+            }
         }
     }
 }

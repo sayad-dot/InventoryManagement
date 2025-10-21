@@ -37,6 +37,14 @@
                     <!-- Basic Info Tab -->
                     <div class="tab-pane fade show active" id="basic" role="tabpanel">
                         <div class="card-body">
+                            @if (TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    @TempData["SuccessMessage"]
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            }
+
                             <form method="post" asp-action="UpdateBasicSettings">
                                 <input type="hidden" asp-for="Id" />
                                 
@@ -88,29 +96,52 @@
                                 <input type="hidden" id="FieldOrder" name="FieldOrder" value="@Model.FieldOrder" />
 
                                 <div id="customFieldsContainer">
-                                    <!-- Fields will be populated by JavaScript -->
-                                </div>
-
-                                <!-- Available Field Types -->
-                                <div class="mb-4">
-                                    <h6>Add New Field Type:</h6>
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('string')">
-                                            <i class="fas fa-font"></i> Single-line Text
-                                        </button>
-                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('text')">
-                                            <i class="fas fa-align-left"></i> Multi-line Text
-                                        </button>
-                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('number')">
-                                            <i class="fas fa-hashtag"></i> Number
-                                        </button>
-                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('bool')">
-                                            <i class="fas fa-toggle-on"></i> True/False
-                                        </button>
-                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addField('file')">
-                                            <i class="fas fa-file"></i> File/Image URL
-                                        </button>
-                                    </div>
+                                    @foreach (var field in Model.CustomFields)
+                                    {
+                                        <div class="card mb-3 field-item" data-field-type="@field.Type" data-field-index="@field.Index">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas @GetFieldTypeIcon(field.Type) me-2"></i>
+                                                    <strong>@GetFieldTypeDisplayName(field.Type) Field @field.Index</strong>
+                                                </div>
+                                                <div>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1 move-up">
+                                                        <i class="fas fa-arrow-up"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1 move-down">
+                                                        <i class="fas fa-arrow-down"></i>
+                                                    </button>
+                                                    <div class="form-check form-switch d-inline-block me-2">
+                                                        <input class="form-check-input field-active" type="checkbox" 
+                                                               name="CustomFields[@GetFieldIndex(field.Type, field.Index)].IsActive" 
+                                                               value="true" @(field.IsActive ? "checked" : "")>
+                                                        <input type="hidden" name="CustomFields[@GetFieldIndex(field.Type, field.Index)].IsActive" value="false">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-8">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Field Name</label>
+                                                            <input type="text" class="form-control field-name" 
+                                                                   name="CustomFields[@GetFieldIndex(field.Type, field.Index)].Name" 
+                                                                   value="@field.Name" 
+                                                                   placeholder="Enter field name (e.g., 'Model', 'Price')">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Field Type</label>
+                                                            <input type="text" class="form-control" value="@GetFieldTypeDisplayName(field.Type)" readonly>
+                                                            <input type="hidden" name="CustomFields[@GetFieldIndex(field.Type, field.Index)].Type" value="@field.Type">
+                                                            <input type="hidden" name="CustomFields[@GetFieldIndex(field.Type, field.Index)].Index" value="@field.Index">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
 
                                 <button type="submit" class="btn btn-primary">Save Field Configuration</button>
@@ -123,9 +154,8 @@
                         <div class="card-body">
                             <h5>Access Control</h5>
                             <p class="text-muted">Manage who can add items to this inventory.</p>
-                            <!-- Will be implemented in Phase 4 -->
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Access control features will be available in the next update.
+                                <i class="fas fa-info-circle"></i> Access control features will be available in Phase 4.
                             </div>
                         </div>
                     </div>
@@ -136,122 +166,87 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         // Field management JavaScript
-        let fieldCounter = 0;
-        const fieldTypes = {
-            'string': { icon: 'fa-font', max: 3, current: 0 },
-            'text': { icon: 'fa-align-left', max: 3, current: 0 },
-            'number': { icon: 'fa-hashtag', max: 3, current: 0 },
-            'bool': { icon: 'fa-toggle-on', max: 3, current: 0 },
-            'file': { icon: 'fa-file', max: 3, current: 0 }
-        };
-
-        function addField(type) {
-            if (fieldTypes[type].current >= fieldTypes[type].max) {
-                alert(`You can only have ${fieldTypes[type].max} ${type} fields.`);
-                return;
-            }
-
-            fieldCounter++;
-            fieldTypes[type].current++;
-
-            const fieldId = `${type}_${fieldCounter}`;
-            const fieldHtml = `
-                <div class="card mb-3 field-item" data-field-type="${type}" data-field-id="${fieldId}">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas ${fieldTypes[type].icon} me-2"></i>
-                            <strong>${getTypeDisplayName(type)} Field</strong>
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="moveFieldUp(this)">
-                                <i class="fas fa-arrow-up"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="moveFieldDown(this)">
-                                <i class="fas fa-arrow-down"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeField(this, '${type}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Field Name</label>
-                                    <input type="text" class="form-control" name="CustomFields[${fieldCounter}].Name" 
-                                           placeholder="Enter field name (e.g., 'Model', 'Price')" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Field Type</label>
-                                    <input type="text" class="form-control" value="${getTypeDisplayName(type)}" readonly>
-                                    <input type="hidden" name="CustomFields[${fieldCounter}].Type" value="${type}">
-                                    <input type="hidden" name="CustomFields[${fieldCounter}].Index" value="${fieldTypes[type].current}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="CustomFields[${fieldCounter}].IsActive" checked>
-                            <label class="form-check-label">Enable this field</label>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('customFieldsContainer').insertAdjacentHTML('beforeend', fieldHtml);
-            updateFieldOrder();
-        }
-
-        function getTypeDisplayName(type) {
-            const names = {
-                'string': 'Single-line Text',
-                'text': 'Multi-line Text',
-                'number': 'Number',
-                'bool': 'True/False',
-                'file': 'File/Image URL'
-            };
-            return names[type] || type;
-        }
-
-        function removeField(button, type) {
-            const card = button.closest('.field-item');
-            card.remove();
-            fieldTypes[type].current--;
-            updateFieldOrder();
-        }
-
-        function moveFieldUp(button) {
-            const card = button.closest('.field-item');
-            const prevCard = card.previousElementSibling;
-            if (prevCard) {
-                card.parentNode.insertBefore(card, prevCard);
-                updateFieldOrder();
-            }
-        }
-
-        function moveFieldDown(button) {
-            const card = button.closest('.field-item');
-            const nextCard = card.nextElementSibling;
-            if (nextCard) {
-                card.parentNode.insertBefore(nextCard, card);
-                updateFieldOrder();
-            }
-        }
-
-        function updateFieldOrder() {
-            const fields = document.querySelectorAll('.field-item');
-            const order = Array.from(fields).map(field => field.getAttribute('data-field-id'));
-            document.getElementById('FieldOrder').value = order.join(',');
-        }
-
-        // Initialize existing fields from model
         document.addEventListener('DOMContentLoaded', function() {
-            // This would be populated from server-side data
-            // For now, we'll start with an empty state
+            // Move field up
+            document.querySelectorAll('.move-up').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.field-item');
+                    const prevCard = card.previousElementSibling;
+                    if (prevCard) {
+                        card.parentNode.insertBefore(card, prevCard);
+                        updateFieldOrder();
+                    }
+                });
+            });
+
+            // Move field down
+            document.querySelectorAll('.move-down').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.field-item');
+                    const nextCard = card.nextElementSibling;
+                    if (nextCard) {
+                        card.parentNode.insertBefore(nextCard, card);
+                        updateFieldOrder();
+                    }
+                });
+            });
+
+            function updateFieldOrder() {
+                const fields = document.querySelectorAll('.field-item');
+                const order = Array.from(fields).map(field => {
+                    const type = field.getAttribute('data-field-type');
+                    const index = field.getAttribute('data-field-index');
+                    return `${type}_${index}`;
+                });
+                document.getElementById('FieldOrder').value = order.join(',');
+            }
+
+            // Initialize field order
+            updateFieldOrder();
         });
     </script>
+}
+
+@functions {
+    private string GetFieldTypeIcon(string type)
+    {
+        return type switch
+        {
+            "string" => "fa-font",
+            "text" => "fa-align-left",
+            "number" => "fa-hashtag",
+            "bool" => "fa-toggle-on",
+            "file" => "fa-file",
+            _ => "fa-question"
+        };
+    }
+
+    private string GetFieldTypeDisplayName(string type)
+    {
+        return type switch
+        {
+            "string" => "Single-line Text",
+            "text" => "Multi-line Text",
+            "number" => "Number",
+            "bool" => "True/False",
+            "file" => "File/Image URL",
+            _ => type
+        };
+    }
+
+    private int GetFieldIndex(string type, int index)
+    {
+        return type switch
+        {
+            "string" => index - 1,
+            "text" => index + 2,
+            "number" => index + 5,
+            "bool" => index + 8,
+            "file" => index + 11,
+            _ => 0
+        };
+    }
 }
