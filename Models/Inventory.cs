@@ -85,6 +85,10 @@ namespace InventoryManagement.Models
         // Field display order (comma-separated field identifiers)
         public string? FieldOrder { get; set; }
 
+        // Optimistic locking
+        [Timestamp]
+        public byte[] Version { get; set; } = Array.Empty<byte>();
+
         // Navigation properties
         public ICollection<Item> Items { get; set; } = new List<Item>();
         public ICollection<InventoryAccess> AccessUsers { get; set; } = new List<InventoryAccess>();

@@ -1,5 +1,6 @@
 using InventoryManagement.Data;
 using InventoryManagement.Models;
+using InventoryManagement.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -8,6 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
+
+// Add Access Control Service
+builder.Services.AddScoped<IAccessControlService, AccessControlService>();
 
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

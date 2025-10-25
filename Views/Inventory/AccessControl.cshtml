@@ -1,0 +1,166 @@
+@model InventoryManagement.ViewModels.AccessControlViewModel
+@{
+    ViewData["Title"] = $"Access Control - {Model.InventoryTitle}";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Access Control - @Model.InventoryTitle
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post" asp-action="UpdateAccessControl">
+                        <input type="hidden" asp-for="InventoryId" />
+                        
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsPublic" class="form-check-input" type="checkbox" id="isPublicSwitch">
+                                <label class="form-check-label fw-bold" for="isPublicSwitch">
+                                    Public Inventory
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                When enabled, all authenticated users can add items to this inventory. 
+                                When disabled, only you and explicitly granted users can add items.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mb-4">Save Access Settings</button>
+                    </form>
+
+                    <hr />
+
+                    <h5>Manage User Access</h5>
+                    <p class="text-muted">Grant or revoke write access to specific users for this inventory.</p>
+
+                    <!-- Add User Form -->
+                    <form method="post" asp-action="GrantAccess" class="mb-4">
+                        <input type="hidden" name="inventoryId" value="@Model.InventoryId" />
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <input type="email" name="userEmail" class="form-control" 
+                                       placeholder="Enter user email address" 
+                                       id="userSearch" required
+                                       list="userSuggestions" />
+                                <datalist id="userSuggestions"></datalist>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-plus me-1"></i>Grant Access
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Users with Access -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Users with Write Access</h6>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.GrantedUsers.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Email</th>
+                                                <th>Access Granted</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var user in Model.GrantedUsers)
+                                            {
+                                                <tr>
+                                                    <td>@user.UserName</td>
+                                                    <td>@user.UserEmail</td>
+                                                    <td>@user.GrantedAt.ToString("MMM dd, yyyy")</td>
+                                                    <td>
+                                                        <form method="post" asp-action="RevokeAccess" class="d-inline">
+                                                            <input type="hidden" name="accessId" value="@user.Id" />
+                                                            <input type="hidden" name="inventoryId" value="@Model.InventoryId" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                    onclick="return confirm('Are you sure you want to revoke access from @user.UserEmail?')">
+                                                                <i class="fas fa-trash"></i> Revoke
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <p>No users have been granted explicit access yet.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <a asp-action="Settings" asp-route-id="@Model.InventoryId" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userSearch = document.getElementById('userSearch');
+            const userSuggestions = document.getElementById('userSuggestions');
+
+            userSearch.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                
+                if (searchTerm.length < 2) {
+                    userSuggestions.innerHTML = '';
+                    return;
+                }
+
+                fetch(`/Inventory/SearchUsers?term=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(users => {
+                        userSuggestions.innerHTML = '';
+                        users.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.email;
+                            option.textContent = `${user.fullName} (${user.email})`;
+                            userSuggestions.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error searching users:', error));
+            });
+        });
+    </script>
+}

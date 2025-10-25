@@ -1,6 +1,7 @@
 using InventoryManagement.Data;
 using InventoryManagement.Models;
 using InventoryManagement.ViewModels;
+using InventoryManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,15 +15,18 @@ namespace InventoryManagement.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<InventoryController> _logger;
+        private readonly IAccessControlService _accessControlService;
 
         public InventoryController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            ILogger<InventoryController> logger)
+            ILogger<InventoryController> logger,
+            IAccessControlService accessControlService)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _accessControlService = accessControlService;
         }
 
         [HttpGet]
@@ -674,6 +678,125 @@ namespace InventoryManagement.Controllers
             }
 
             return RedirectToAction("Items", new { id = item.InventoryId });
+        }
+
+        // ACCESS CONTROL METHODS
+
+        [HttpGet]
+        public async Task<IActionResult> AccessControl(int id)
+        {
+            var viewModel = await _accessControlService.GetAccessControlViewModelAsync(id);
+            if (viewModel == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var inventory = await _context.Inventories.FindAsync(id);
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            if (inventory.CreatorId != user.Id && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAccessControl(AccessControlViewModel model)
+        {
+            var inventory = await _context.Inventories.FindAsync(model.InventoryId);
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (inventory.CreatorId != user?.Id && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            try
+            {
+                inventory.IsPublic = model.IsPublic;
+                inventory.UpdatedAt = DateTime.UtcNow;
+
+                _context.Inventories.Update(inventory);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Access control settings updated successfully!";
+                return RedirectToAction("AccessControl", new { id = model.InventoryId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating access control for inventory {InventoryId}", model.InventoryId);
+                ModelState.AddModelError("", "An error occurred while updating access control. Please try again.");
+                return View("AccessControl", model);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GrantAccess(int inventoryId, string userEmail)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var result = await _accessControlService.GrantUserAccessAsync(inventoryId, userEmail, user.Id);
+
+            if (result)
+            {
+                TempData["SuccessMessage"] = $"Access granted to {userEmail}";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = $"Failed to grant access to {userEmail}. User not found or you don't have permission.";
+            }
+
+            return RedirectToAction("AccessControl", new { id = inventoryId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RevokeAccess(int accessId, int inventoryId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var result = await _accessControlService.RevokeUserAccessAsync(accessId, user.Id);
+
+            if (result)
+            {
+                TempData["SuccessMessage"] = "Access revoked successfully";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to revoke access";
+            }
+
+            return RedirectToAction("AccessControl", new { id = inventoryId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchUsers(string term)
+        {
+            var results = await _accessControlService.SearchUsersAsync(term);
+            return Json(results);
         }
 
         // HELPER METHODS
