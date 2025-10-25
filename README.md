@@ -61,8 +61,8 @@ dotnet run
 
 By default the app will bind to the URLs configured in `Properties/launchSettings.json`. Typical local URLs are:
 
-- [https://localhost:7000](https://localhost:7000)
-- [http://localhost:5000](http://localhost:5000)
+
+- [http://localhost:5238](http://localhost:5238)
 
 Open one of those in your browser.
 
@@ -123,9 +123,4 @@ This project is released under the MIT License. See the `LICENSE` file for detai
 
 Sayad Ibna Azad
 
----
-If you'd like, I can also:
 
-- Add a minimal `Dockerfile` to the repo
-- Add a `Makefile` or VS Code tasks for common commands
-- Create a short CONTRIBUTING.md with contribution guidelines
