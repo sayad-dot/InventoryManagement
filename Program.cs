@@ -2,6 +2,7 @@ using InventoryManagement.Data;
 using InventoryManagement.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,53 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
+// Add External Authentication if configured
+var authenticationBuilder = builder.Services.AddAuthentication();
+
+// Add Google Authentication if configured
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+{
+    authenticationBuilder.AddGoogle(options =>
+    {
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+        options.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
+    });
+}
+
+// Add Facebook Authentication if configured
+var facebookAppId = builder.Configuration["Authentication:Facebook:AppId"];
+var facebookAppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+if (!string.IsNullOrEmpty(facebookAppId) && !string.IsNullOrEmpty(facebookAppSecret))
+{
+    authenticationBuilder.AddFacebook(options =>
+    {
+        options.AppId = facebookAppId;
+        options.AppSecret = facebookAppSecret;
+        options.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
+        
+        // Configure scopes - Facebook requires app review for email access
+        options.Scope.Clear();
+        options.Scope.Add("public_profile");
+        
+        // Add email scope - this may require Facebook app review
+        // Comment this out if your Facebook app doesn't have email permission
+        options.Scope.Add("email");
+        
+        // Set fields to retrieve from Facebook
+        options.Fields.Add("name");
+        options.Fields.Add("id");
+        options.Fields.Add("first_name");
+        options.Fields.Add("last_name");
+        options.Fields.Add("email");
+        
+        // Save tokens for future API calls
+        options.SaveTokens = true;
+    });
+}
+
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -55,6 +103,14 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// Add security headers middleware
+app.Use(async (context, next) =>
+{
+    // Set a clean Permissions-Policy header without bluetooth
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    await next();
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

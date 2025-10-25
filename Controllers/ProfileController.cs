@@ -31,9 +31,9 @@ namespace InventoryManagement.Controllers
 
             var model = new ProfileViewModel
             {
-                Email = user.Email,
-                FullName = user.FullName,
-                Username = user.UserName,
+                Email = user.Email ?? string.Empty,
+                FullName = user.FullName ?? string.Empty,
+                Username = user.UserName ?? string.Empty,
                 CreatedAt = user.CreatedAt
             };
 
@@ -51,8 +51,8 @@ namespace InventoryManagement.Controllers
 
             var model = new EditProfileViewModel
             {
-                FullName = user.FullName,
-                Email = user.Email
+                FullName = user.FullName ?? string.Empty,
+                Email = user.Email ?? string.Empty
             };
 
             return View(model);

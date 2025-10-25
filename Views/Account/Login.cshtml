@@ -32,6 +32,33 @@
                     
                     <button type="submit" class="btn btn-success w-100">Login</button>
                 </form>
+
+                <!-- Social Login Section -->
+                <div class="mt-4">
+                    <div class="text-center mb-3">
+                        <hr />
+                        <span class="px-3 bg-white text-muted">Or login with</span>
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <form asp-action="ExternalLogin" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger w-100" name="provider" value="Google" title="Login using your Google account">
+                                    <i class="fab fa-google me-2"></i>Google
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-6">
+                            <form asp-action="ExternalLogin" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-primary w-100" name="provider" value="Facebook" title="Login using your Facebook account">
+                                    <i class="fab fa-facebook me-2"></i>Facebook
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-footer text-center">
                 <p class="mb-0">
@@ -44,4 +71,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    
+    <!-- Add Font Awesome for social icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 }

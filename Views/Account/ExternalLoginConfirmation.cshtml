@@ -1,0 +1,62 @@
+@model InventoryManagement.ViewModels.ExternalLoginConfirmationViewModel
+@{
+    ViewData["Title"] = "Complete Registration";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="card-title mb-0">Complete Your Registration</h4>
+            </div>
+            <div class="card-body">
+                @if (string.IsNullOrEmpty(Model.Email))
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>@ViewData["LoginProvider"]</strong> authentication was successful! 
+                        Please provide your email address to complete the registration.
+                    </div>
+                }
+                else
+                {
+                    <p class="text-info">
+                        You've successfully authenticated with <strong>@ViewData["LoginProvider"]</strong>.
+                        Please review and confirm your information below.
+                    </p>
+                }
+                
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        @if (string.IsNullOrEmpty(Model.Email) || (Model.Email.StartsWith("facebook_") && Model.Email.EndsWith("@tempmail.local")))
+                        {
+                            <input asp-for="Email" class="form-control" placeholder="Enter your email address" value="" />
+                            <div class="form-text">Please enter your email address to complete registration.</div>
+                        }
+                        else
+                        {
+                            <input asp-for="Email" class="form-control" readonly />
+                            <div class="form-text">This email was provided by @ViewData["LoginProvider"].</div>
+                        }
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Complete Registration</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

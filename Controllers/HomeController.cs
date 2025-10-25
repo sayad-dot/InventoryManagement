@@ -77,9 +77,9 @@ namespace InventoryManagement.Controllers
             };
 
             // Add user-specific welcome message if authenticated
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
             {
-                ViewData["WelcomeMessage"] = $"Welcome back, {User.Identity.Name}!";
+                ViewData["WelcomeMessage"] = $"Welcome back, {User.Identity.Name ?? "User"}!";
             }
             else
             {

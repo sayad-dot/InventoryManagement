@@ -384,4 +384,17 @@ $RECYCLE.BIN/
 # JetBrains Rider
 *.sln.iml
 
+# Security and Secrets - Additional protection
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+*.env
+.env.*
+secrets.json
+config.json
+*.pfx
+*.p12
+
 ## End of https://www.toptal.com/developers/gitignore/api/dotnet,visualstudiocode
