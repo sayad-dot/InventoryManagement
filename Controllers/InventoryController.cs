@@ -16,17 +16,23 @@ namespace InventoryManagement.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<InventoryController> _logger;
         private readonly IAccessControlService _accessControlService;
+        private readonly IDiscussionService _discussionService;
+        private readonly ILikeService _likeService;
 
         public InventoryController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             ILogger<InventoryController> logger,
-            IAccessControlService accessControlService)
+            IAccessControlService accessControlService,
+            IDiscussionService discussionService,
+            ILikeService likeService)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
             _accessControlService = accessControlService;
+            _discussionService = discussionService;
+            _likeService = likeService;
         }
 
         [HttpGet]
@@ -805,6 +811,68 @@ namespace InventoryManagement.Controllers
             return Json(results);
         }
 
+        // DISCUSSION AND LIKE METHODS
+
+        // Discussion methods
+        [HttpGet]
+        public async Task<IActionResult> GetDiscussions(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var discussions = await _discussionService.GetDiscussionsAsync(id, user?.Id ?? string.Empty);
+            return Json(discussions);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateDiscussion(int id, string message)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var discussion = await _discussionService.CreateDiscussionAsync(id, message, user.Id);
+            return Json(discussion);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteDiscussion(int discussionId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _discussionService.DeleteDiscussionAsync(discussionId, user.Id);
+            return Json(new { success = result });
+        }
+
+        // Like methods
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleLike(int itemId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _likeService.ToggleLikeAsync(itemId, user.Id);
+            return Json(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLikeStatus(int itemId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var result = await _likeService.GetLikeStatusAsync(itemId, user?.Id ?? string.Empty);
+            return Json(result);
+        }
+
         // HELPER METHODS
 
         private async Task<bool> HasWriteAccess(Inventory inventory, ApplicationUser? user)
@@ -963,6 +1031,8 @@ namespace InventoryManagement.Controllers
 
         private ItemViewModel MapItemToViewModel(Item item, Inventory inventory, bool canEdit)
         {
+            var user = _userManager.GetUserAsync(User).Result;
+            
             var viewModel = new ItemViewModel
             {
                 Id = item.Id,
@@ -972,7 +1042,10 @@ namespace InventoryManagement.Controllers
                 UpdatedAt = item.UpdatedAt,
                 Version = item.Version,
                 CanEdit = canEdit,
-                CreatorName = inventory.Creator.FullName
+                CreatorName = inventory.Creator.FullName,
+                // Like properties
+                IsLiked = user != null && _context.ItemLikes.Any(il => il.ItemId == item.Id && il.UserId == user.Id),
+                LikeCount = _context.ItemLikes.Count(il => il.ItemId == item.Id)
             };
 
             // Map custom field values

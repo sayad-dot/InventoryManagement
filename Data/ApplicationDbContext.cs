@@ -17,6 +17,8 @@ namespace InventoryManagement.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<InventoryTag> InventoryTags { get; set; }
+        public DbSet<Discussion> Discussions { get; set; }
+        public DbSet<ItemLike> ItemLikes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -83,6 +85,37 @@ namespace InventoryManagement.Data
                 new Tag { Id = 7, Name = "vehicles" },
                 new Tag { Id = 8, Name = "supplies" }
             );
+
+            // Configure Discussion relationships
+            builder.Entity<Discussion>()
+                .HasOne(d => d.Inventory)
+                .WithMany()
+                .HasForeignKey(d => d.InventoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Discussion>()
+                .HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ItemLike relationships
+            builder.Entity<ItemLike>()
+                .HasOne(il => il.Item)
+                .WithMany(i => i.Likes)
+                .HasForeignKey(il => il.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ItemLike>()
+                .HasOne(il => il.User)
+                .WithMany()
+                .HasForeignKey(il => il.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ensure unique likes per user per item
+            builder.Entity<ItemLike>()
+                .HasIndex(il => new { il.ItemId, il.UserId })
+                .IsUnique();
         }
     }
 }

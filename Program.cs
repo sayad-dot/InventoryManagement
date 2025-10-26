@@ -1,4 +1,5 @@
 using InventoryManagement.Data;
+using InventoryManagement.Hubs;
 using InventoryManagement.Models;
 using InventoryManagement.Services;
 using Microsoft.AspNetCore.Identity;
@@ -10,8 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllersWithViews();
 
-// Add Access Control Service
+// Add SignalR services
+builder.Services.AddSignalR();
+
+// Add custom services
 builder.Services.AddScoped<IAccessControlService, AccessControlService>();
+builder.Services.AddScoped<IDiscussionService, DiscussionService>();
+builder.Services.AddScoped<ILikeService, LikeService>();
 
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -129,6 +135,9 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
+
+// Map SignalR hubs
+app.MapHub<DiscussionHub>("/discussionHub");
 
 // Initialize database and create roles
 using (var scope = app.Services.CreateScope())

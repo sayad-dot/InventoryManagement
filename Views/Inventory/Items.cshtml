@@ -51,6 +51,8 @@
                                         {
                                             <th>@header</th>
                                         }
+                                        <th>Likes</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -95,6 +97,17 @@
                                                     }
                                                 </td>
                                             }
+                                            <!-- Like Column -->
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <button class="btn btn-sm like-btn @(item.IsLiked ? "btn-danger" : "btn-outline-danger")" 
+                                                            data-item-id="@item.Id" 
+                                                            title="@(item.IsLiked ? "Unlike this item" : "Like this item")">
+                                                        <i class="fas fa-heart"></i>
+                                                    </button>
+                                                    <span class="like-count ms-2">@item.LikeCount</span>
+                                                </div>
+                                            </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
                                                     @if (item.CanEdit)
@@ -161,13 +174,86 @@
 
 @section Scripts {
     <script>
-        // Add any JavaScript needed for item management
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize tooltips if needed
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+
+            // Initialize like buttons
+            document.querySelectorAll('.like-btn').forEach(button => {
+                const itemId = button.getAttribute('data-item-id');
+                updateLikeButton(button, itemId);
+            });
+
+            // Handle like button clicks
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.like-btn')) {
+                    const button = e.target.closest('.like-btn');
+                    const itemId = button.getAttribute('data-item-id');
+                    toggleLike(button, itemId);
+                }
+            });
+
+            // Update like button appearance
+            function updateLikeButton(button, itemId) {
+                fetch(`/Inventory/GetLikeStatus?itemId=${itemId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const likeCount = button.nextElementSibling;
+                        
+                        if (data.isLiked) {
+                            button.classList.remove('btn-outline-danger');
+                            button.classList.add('btn-danger');
+                        } else {
+                            button.classList.remove('btn-danger');
+                            button.classList.add('btn-outline-danger');
+                        }
+                        
+                        likeCount.textContent = data.likeCount;
+                    })
+                    .catch(error => console.error('Error updating like status:', error));
+            }
+
+            // Toggle like status
+            function toggleLike(button, itemId) {
+                fetch(`/Inventory/ToggleLike?itemId=${itemId}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const likeCount = button.nextElementSibling;
+                    
+                    if (data.isLiked) {
+                        button.classList.remove('btn-outline-danger');
+                        button.classList.add('btn-danger');
+                        // Add animation
+                        button.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            button.style.transform = 'scale(1)';
+                        }, 300);
+                    } else {
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-outline-danger');
+                    }
+                    
+                    likeCount.textContent = data.likeCount;
+                })
+                .catch(error => console.error('Error toggling like:', error));
+            }
         });
     </script>
+    
+    <style>
+        .like-btn {
+            transition: all 0.3s ease;
+        }
+        .like-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
 }

@@ -47,5 +47,8 @@ namespace InventoryManagement.Models
 
         // Version for optimistic locking
         public int Version { get; set; } = 1;
+
+        // Navigation properties
+        public ICollection<ItemLike> Likes { get; set; } = new List<ItemLike>();
     }
 }

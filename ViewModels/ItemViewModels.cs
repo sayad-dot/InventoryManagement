@@ -65,6 +65,10 @@ namespace InventoryManagement.ViewModels
         // For access control
         public bool CanEdit { get; set; }
         public string CreatorName { get; set; } = string.Empty;
+
+        // Like properties
+        public bool IsLiked { get; set; }
+        public int LikeCount { get; set; }
     }
 
     public class ItemsTableViewModel
