@@ -69,7 +69,13 @@
                                 
                                 <div class="mb-3">
                                     <label asp-for="ImageUrl" class="form-label"></label>
-                                    <input asp-for="ImageUrl" class="form-control" />
+                                    <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                                    <div class="form-text">
+                                        <strong>⚠️ Note:</strong> Google Images URLs often don't work due to CORS restrictions. 
+                                        Try <a href="https://unsplash.com" target="_blank">Unsplash</a>, 
+                                        <a href="https://pixabay.com" target="_blank">Pixabay</a>, or 
+                                        <a asp-action="TestImage" target="_blank">test your URL first</a>.
+                                    </div>
                                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                                 </div>
                                 

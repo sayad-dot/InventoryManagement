@@ -101,6 +101,12 @@ namespace InventoryManagement.Controllers
         }
 
         [HttpGet]
+        public IActionResult TestImage()
+        {
+            return View();
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Create()
         {
             var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
