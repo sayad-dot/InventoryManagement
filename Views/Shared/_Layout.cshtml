@@ -54,6 +54,23 @@
         </li>
     }
 </ul>
+                    
+                    <!-- Search Form in Navbar -->
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form class="d-flex me-2" method="get" asp-controller="Search" asp-action="Index" id="navbarSearchForm">
+                            <div class="input-group input-group-sm position-relative">
+                                <input type="search" class="form-control" placeholder="Search..." 
+                                       name="Query" id="navbarSearch" aria-label="Search" 
+                                       style="min-width: 200px;">
+                                <button class="btn btn-outline-light" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <div class="dropdown-menu w-100" id="quickSearchResults"></div>
+                            </div>
+                        </form>
+                    }
+                    
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -105,5 +122,107 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     
     @await RenderSectionAsync("Scripts", required: false)
+
+<script>
+    // Quick search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const navbarSearch = document.getElementById('navbarSearch');
+        const quickSearchResults = document.getElementById('quickSearchResults');
+        
+        if (navbarSearch) {
+            navbarSearch.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    quickSearchResults.innerHTML = '';
+                    quickSearchResults.classList.remove('show');
+                    return;
+                }
+                
+                // Debounce search
+                clearTimeout(navbarSearch.searchTimeout);
+                navbarSearch.searchTimeout = setTimeout(() => {
+                    performQuickSearch(query);
+                }, 300);
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!navbarSearch.contains(e.target) && !quickSearchResults.contains(e.target)) {
+                    quickSearchResults.classList.remove('show');
+                }
+            });
+        }
+        
+        function performQuickSearch(query) {
+            fetch(`/Search/QuickSearch?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.results.length > 0) {
+                        showQuickSearchResults(data.results);
+                    } else {
+                        quickSearchResults.innerHTML = '<div class="dropdown-item text-muted">No results found</div>';
+                        quickSearchResults.classList.add('show');
+                    }
+                })
+                .catch(error => {
+                    console.error('Quick search error:', error);
+                    quickSearchResults.innerHTML = '<div class="dropdown-item text-danger">Search error</div>';
+                    quickSearchResults.classList.add('show');
+                });
+        }
+        
+        function showQuickSearchResults(results) {
+            quickSearchResults.innerHTML = '';
+            
+            results.forEach(result => {
+                const resultItem = document.createElement('a');
+                resultItem.className = 'dropdown-item';
+                resultItem.href = result.url;
+                resultItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge ${result.type === 'inventory' ? 'bg-primary' : 'bg-success'} me-2">
+                                ${result.type === 'inventory' ? 'I' : 'Item'}
+                            </span>
+                            <strong>${result.title}</strong>
+                        </div>
+                        <small class="text-muted">${result.relevance.toFixed(1)}</small>
+                    </div>
+                    <small class="text-muted">${result.creatorName}</small>
+                `;
+                quickSearchResults.appendChild(resultItem);
+            });
+            
+            // Add "View all results" link
+            const viewAllLink = document.createElement('a');
+            viewAllLink.className = 'dropdown-item text-center border-top';
+            viewAllLink.href = `/Search/Index?Query=${encodeURIComponent(navbarSearch.value)}`;
+            viewAllLink.innerHTML = '<small class="text-primary">View all results</small>';
+            quickSearchResults.appendChild(viewAllLink);
+            
+            quickSearchResults.classList.add('show');
+        }
+    });
+</script>
+
+<style>
+    #quickSearchResults {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-top: 5px;
+        position: absolute !important;
+        top: 100%;
+        z-index: 1050;
+    }
+    .dropdown-item {
+        white-space: normal;
+        padding: 0.5rem 1rem;
+    }
+    .input-group.position-relative {
+        position: relative;
+    }
+</style>
+
 </body>
 </html>

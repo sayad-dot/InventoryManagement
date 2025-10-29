@@ -1,0 +1,243 @@
+@model InventoryManagement.ViewModels.StatisticsViewModel
+@{
+    ViewData["Title"] = $"Statistics - {Model.InventoryTitle}";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Statistics - @Model.InventoryTitle
+                    </h4>
+                    <div>
+                        <a asp-action="Details" asp-route-id="@Model.InventoryId" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Overview Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-primary">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Total Items</h5>
+                                            <h2 class="mb-0">@Model.TotalItems</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-cube fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Total Likes</h5>
+                                            <h2 class="mb-0">@Model.TotalLikes</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-heart fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-warning">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Discussions</h5>
+                                            <h2 class="mb-0">@Model.TotalDiscussions</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-comments fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title">Contributors</h5>
+                                            <h2 class="mb-0">@Model.UniqueContributors</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-users fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Field Statistics -->
+                    <h5 class="mb-3">Field Statistics</h5>
+                    @if (Model.FieldStats.Any())
+                    {
+                        <div class="row">
+                            @foreach (var fieldStat in Model.FieldStats)
+                            {
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="card-title mb-0">@fieldStat.FieldName</h6>
+                                            <small class="text-muted">@fieldStat.DataType</small>
+                                        </div>
+                                        <div class="card-body">
+                                            @if (fieldStat.FieldType == "number")
+                                            {
+                                                <div class="row text-center">
+                                                    <div class="col-4">
+                                                        <small class="text-muted">Min</small>
+                                                        <div class="fw-bold">@(fieldStat.MinValue?.ToString("N2") ?? "N/A")</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <small class="text-muted">Max</small>
+                                                        <div class="fw-bold">@(fieldStat.MaxValue?.ToString("N2") ?? "N/A")</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <small class="text-muted">Average</small>
+                                                        <div class="fw-bold">@(fieldStat.AverageValue?.ToString("N2") ?? "N/A")</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 text-center">
+                                                    <small class="text-muted">Total: @(fieldStat.SumValue?.ToString("N2") ?? "N/A")</small>
+                                                </div>
+                                            }
+                                            else if (fieldStat.FieldType == "bool")
+                                            {
+                                                <div class="row text-center">
+                                                    <div class="col-6">
+                                                        <small class="text-muted">True</small>
+                                                        <div class="fw-bold text-success">@fieldStat.TrueCount</div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted">False</small>
+                                                        <div class="fw-bold text-danger">@fieldStat.FalseCount</div>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="mb-2">
+                                                    <small class="text-muted">Unique Values: @fieldStat.UniqueValues</small>
+                                                </div>
+                                                @if (fieldStat.CommonValues.Any())
+                                                {
+                                                    <div>
+                                                        <small class="text-muted d-block mb-1">Most Common:</small>
+                                                        @foreach (var commonValue in fieldStat.CommonValues)
+                                                        {
+                                                            <div class="d-flex justify-content-between small mb-1">
+                                                                <span>@commonValue.Value</span>
+                                                                <span class="text-muted">@commonValue.Count (@commonValue.Percentage.ToString("F1")%)</span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                            }
+                                            <div class="mt-2">
+                                                <small class="text-muted">Empty Fields: @fieldStat.EmptyCount</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No field statistics available. Add items with custom field data to see statistics.
+                        </div>
+                    }
+
+                    <!-- Popular Items -->
+                    @if (Model.PopularItems.Any())
+                    {
+                        <h5 class="mb-3 mt-4">Most Liked Items</h5>
+                        <div class="row">
+                            @foreach (var popularItem in Model.PopularItems)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="card-title mb-0">@popularItem.DisplayValue</h6>
+                                                    @if (!string.IsNullOrEmpty(popularItem.CustomId))
+                                                    {
+                                                        <small class="text-muted">ID: @popularItem.CustomId</small>
+                                                    }
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-heart me-1"></i>@popularItem.LikeCount
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Recent Activity -->
+                    <h5 class="mb-3 mt-4">Recent Activity</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Last Item Added</h6>
+                                    <p class="card-text">
+                                        @if (Model.LastItemAdded > DateTime.MinValue)
+                                        {
+                                            <i class="fas fa-clock me-2 text-muted"></i>
+                                            @Model.LastItemAdded.ToString("MMM dd, yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No items yet</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Last Discussion</h6>
+                                    <p class="card-text">
+                                        @if (Model.LastDiscussion > DateTime.MinValue)
+                                        {
+                                            <i class="fas fa-clock me-2 text-muted"></i>
+                                            @Model.LastDiscussion.ToString("MMM dd, yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No discussions yet</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

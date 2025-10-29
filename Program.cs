@@ -18,6 +18,8 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<IAccessControlService, AccessControlService>();
 builder.Services.AddScoped<IDiscussionService, DiscussionService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

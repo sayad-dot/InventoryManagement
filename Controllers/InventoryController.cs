@@ -18,6 +18,7 @@ namespace InventoryManagement.Controllers
         private readonly IAccessControlService _accessControlService;
         private readonly IDiscussionService _discussionService;
         private readonly ILikeService _likeService;
+        private readonly IStatisticsService _statisticsService;
 
         public InventoryController(
             ApplicationDbContext context,
@@ -25,7 +26,8 @@ namespace InventoryManagement.Controllers
             ILogger<InventoryController> logger,
             IAccessControlService accessControlService,
             IDiscussionService discussionService,
-            ILikeService likeService)
+            ILikeService likeService,
+            IStatisticsService statisticsService)
         {
             _context = context;
             _userManager = userManager;
@@ -33,6 +35,7 @@ namespace InventoryManagement.Controllers
             _accessControlService = accessControlService;
             _discussionService = discussionService;
             _likeService = likeService;
+            _statisticsService = statisticsService;
         }
 
         [HttpGet]
@@ -1094,6 +1097,37 @@ namespace InventoryManagement.Controllers
             
             headers.Add("Actions");
             return headers;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Statistics(int id)
+        {
+            var inventory = await _context.Inventories
+                .Include(i => i.Creator)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            var isOwner = inventory.CreatorId == user?.Id;
+            var hasAccess = isOwner || inventory.IsPublic || 
+                           (user != null && await _context.InventoryAccesses.AnyAsync(ia => ia.InventoryId == id && ia.UserId == user.Id));
+
+            if (!hasAccess)
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            var statistics = await _statisticsService.GetInventoryStatisticsAsync(id);
+            if (statistics == null)
+            {
+                return NotFound();
+            }
+
+            return View(statistics);
         }
 
         private async Task UpdateInventoryItemCount(int inventoryId)
