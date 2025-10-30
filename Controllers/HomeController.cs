@@ -1,9 +1,11 @@
 using InventoryManagement.ViewModels;
 using InventoryManagement.Models;
+using InventoryManagement.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace InventoryManagement.Controllers
 {
@@ -11,11 +13,13 @@ namespace InventoryManagement.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager)
+        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _logger = logger;
             _userManager = userManager;
+            _context = context;
         }
 
         public IActionResult Index()
@@ -96,8 +100,26 @@ namespace InventoryManagement.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        public IActionResult Admin()
+        public async Task<IActionResult> Admin()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Get basic admin stats
+            var totalUsers = await _userManager.Users.CountAsync();
+            var totalInventories = await _context.Inventories.CountAsync();
+            var totalItems = await _context.Items.CountAsync();
+            var totalDiscussions = await _context.Discussions.CountAsync();
+            
+            ViewData["TotalUsers"] = totalUsers;
+            ViewData["TotalInventories"] = totalInventories;
+            ViewData["TotalItems"] = totalItems;
+            ViewData["TotalDiscussions"] = totalDiscussions;
+            ViewData["AdminName"] = user.FullName;
+
             return View();
         }
 
