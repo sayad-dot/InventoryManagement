@@ -24,6 +24,27 @@
                     </div>
                 </div>
                 
+                <!-- NEW: Action Toolbar (appears when items are selected) -->
+                @if (Model.CanEdit)
+                {
+                    <div class="card-body border-bottom action-toolbar" id="actionToolbar" style="display: none; background-color: #f8f9fa;">
+                        <div class="d-flex align-items-center">
+                            <span class="me-3 fw-bold" id="selectionCount">0 items selected</span>
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="editSelected">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="deleteSelected">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSelection">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                }
+
                 <div class="card-body">
                     @if (TempData["SuccessMessage"] != null)
                     {
@@ -44,21 +65,44 @@
                     @if (Model.Items.Any())
                     {
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
+                            <table class="table table-striped table-hover" id="itemsTable">
                                 <thead class="table-dark">
                                     <tr>
+                                        @if (Model.CanEdit)
+                                        {
+                                            <th style="width: 40px;">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="selectAll" title="Select all items">
+                                                </div>
+                                            </th>
+                                        }
+                                        <th>Custom ID</th>
                                         @foreach (var header in Model.ColumnHeaders)
                                         {
-                                            <th>@header</th>
+                                            if (header != "Actions") // Remove Actions column header
+                                            {
+                                                <th>@header</th>
+                                            }
                                         }
                                         <th>Likes</th>
-                                        <th>Actions</th>
+                                        @if (Model.CanEdit)
+                                        {
+                                            <th style="width: 60px;" class="text-center">Actions</th>
+                                        }
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var item in Model.Items)
                                     {
-                                        <tr>
+                                        <tr data-item-id="@item.Id" class="item-row">
+                                            @if (Model.CanEdit)
+                                            {
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input item-checkbox" type="checkbox" value="@item.Id" title="Select this item">
+                                                    </div>
+                                                </td>
+                                            }
                                             <td>
                                                 <strong>@(item.CustomId ?? "N/A")</strong>
                                             </td>
@@ -71,7 +115,7 @@
                                                             <span>@field.StringValue</span>
                                                             break;
                                                         case "text":
-                                                            <span class="text-truncate" style="max-width: 200px;" 
+                                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" 
                                                                   title="@field.TextValue">@(field.TextValue?.Length > 50 ? field.TextValue.Substring(0, 50) + "..." : field.TextValue)</span>
                                                             break;
                                                         case "number":
@@ -108,28 +152,40 @@
                                                     <span class="like-count ms-2">@item.LikeCount</span>
                                                 </div>
                                             </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    @if (item.CanEdit)
-                                                    {
-                                                        <a asp-action="EditItem" asp-route-id="@item.Id" 
-                                                           class="btn btn-outline-primary" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <form asp-action="DeleteItem" method="post" class="d-inline">
-                                                            <input type="hidden" name="id" value="@item.Id" />
-                                                            <button type="submit" class="btn btn-outline-danger" 
-                                                                    title="Delete" onclick="return confirm('Are you sure you want to delete this item?')">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted">View Only</span>
-                                                    }
-                                                </div>
-                                            </td>
+                                            @if (Model.CanEdit && item.CanEdit)
+                                            {
+                                                <td class="text-center">
+                                                    <!-- NEW: Context Menu Dropdown (COMPLIANT with requirements) -->
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle context-menu-btn" 
+                                                                type="button" data-bs-toggle="dropdown" 
+                                                                data-item-id="@item.Id"
+                                                                style="opacity: 0.4; transition: opacity 0.2s ease;"
+                                                                title="Actions for this item">
+                                                            <i class="fas fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li>
+                                                                <a class="dropdown-item edit-item" href="#" data-item-id="@item.Id">
+                                                                    <i class="fas fa-edit me-2 text-primary"></i>Edit Item
+                                                                </a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <a class="dropdown-item delete-item text-danger" href="#" data-item-id="@item.Id">
+                                                                    <i class="fas fa-trash me-2"></i>Delete Item
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            }
+                                            else if (Model.CanEdit)
+                                            {
+                                                <td class="text-center">
+                                                    <span class="text-muted small">View Only</span>
+                                                </td>
+                                            }
                                         </tr>
                                     }
                                 </tbody>
@@ -172,10 +228,32 @@
     </div>
 </div>
 
+<!-- NEW: Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize tooltips if needed
+            const inventoryId = @Model.InventoryId;
+            let selectedItems = new Set();
+
+            // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -187,6 +265,296 @@
                 updateLikeButton(button, itemId);
             });
 
+            // ============= NEW: SELECTION SYSTEM =============
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            const actionToolbar = document.getElementById('actionToolbar');
+            const selectionCount = document.getElementById('selectionCount');
+            const editSelectedBtn = document.getElementById('editSelected');
+            const deleteSelectedBtn = document.getElementById('deleteSelected');
+            const clearSelectionBtn = document.getElementById('clearSelection');
+
+            // Select All functionality
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+                    itemCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                        updateSelection(checkbox.value, isChecked);
+                    });
+                    updateToolbar();
+                });
+            }
+
+            // Individual checkbox selection
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateSelection(this.value, this.checked);
+                    updateSelectAllState();
+                    updateToolbar();
+                });
+            });
+
+            // Update selection set
+            function updateSelection(itemId, isSelected) {
+                if (isSelected) {
+                    selectedItems.add(itemId);
+                } else {
+                    selectedItems.delete(itemId);
+                }
+            }
+
+            // Update select all checkbox state
+            function updateSelectAllState() {
+                if (selectAllCheckbox) {
+                    const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+                    const totalCount = itemCheckboxes.length;
+                    
+                    selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+                    selectAllCheckbox.checked = checkedCount === totalCount && totalCount > 0;
+                }
+            }
+
+            // Update toolbar visibility and content
+            function updateToolbar() {
+                const count = selectedItems.size;
+                if (count > 0 && actionToolbar) {
+                    actionToolbar.style.display = 'block';
+                    selectionCount.textContent = `${count} item${count > 1 ? 's' : ''} selected`;
+                    
+                    // Enable/disable buttons based on selection count
+                    if (editSelectedBtn) {
+                        editSelectedBtn.disabled = count !== 1;
+                        editSelectedBtn.title = count === 1 ? 'Edit selected item' : 'Select exactly one item to edit';
+                    }
+                } else if (actionToolbar) {
+                    actionToolbar.style.display = 'none';
+                }
+            }
+
+            // Clear selection
+            if (clearSelectionBtn) {
+                clearSelectionBtn.addEventListener('click', function() {
+                    selectedItems.clear();
+                    itemCheckboxes.forEach(checkbox => checkbox.checked = false);
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.checked = false;
+                        selectAllCheckbox.indeterminate = false;
+                    }
+                    updateToolbar();
+                });
+            }
+
+            // Edit selected (single item only)
+            if (editSelectedBtn) {
+                editSelectedBtn.addEventListener('click', function() {
+                    if (selectedItems.size === 1) {
+                        const itemId = Array.from(selectedItems)[0];
+                        window.location.href = `/Inventory/EditItem/${itemId}`;
+                    }
+                });
+            }
+
+            // Delete selected (multiple items)
+            if (deleteSelectedBtn) {
+                deleteSelectedBtn.addEventListener('click', function() {
+                    if (selectedItems.size > 0) {
+                        showDeleteConfirmation(Array.from(selectedItems), true);
+                    }
+                });
+            }
+
+            // ============= NEW: CONTEXT MENU ACTIONS =============
+            document.querySelectorAll('.edit-item').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const itemId = this.getAttribute('data-item-id');
+                    window.location.href = `/Inventory/EditItem/${itemId}`;
+                });
+            });
+
+            document.querySelectorAll('.delete-item').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const itemId = this.getAttribute('data-item-id');
+                    showDeleteConfirmation([itemId], false);
+                });
+            });
+
+            // ============= NEW: HOVER EFFECTS =============
+            document.querySelectorAll('.item-row').forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    const contextMenuBtn = this.querySelector('.context-menu-btn');
+                    if (contextMenuBtn) {
+                        contextMenuBtn.style.opacity = '1';
+                    }
+                });
+                
+                row.addEventListener('mouseleave', function() {
+                    const contextMenuBtn = this.querySelector('.context-menu-btn');
+                    if (contextMenuBtn && !contextMenuBtn.classList.contains('show')) {
+                        contextMenuBtn.style.opacity = '0.4';
+                    }
+                });
+            });
+
+            // Keep context menu visible when dropdown is open
+            document.querySelectorAll('.context-menu-btn').forEach(button => {
+                button.addEventListener('show.bs.dropdown', function() {
+                    this.style.opacity = '1';
+                });
+                
+                button.addEventListener('hide.bs.dropdown', function() {
+                    const row = this.closest('.item-row');
+                    if (!row.matches(':hover')) {
+                        this.style.opacity = '0.4';
+                    }
+                });
+            });
+
+            // ============= NEW: DELETE CONFIRMATION MODAL =============
+            function showDeleteConfirmation(itemIds, isBulk) {
+                const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                const modalBody = document.getElementById('modalBody');
+                const confirmBtn = document.getElementById('confirmAction');
+                
+                const itemText = isBulk ? `${itemIds.length} items` : 'this item';
+                modalBody.innerHTML = `
+                    <p><strong>Are you sure you want to delete ${itemText}?</strong></p>
+                    <p>This action cannot be undone.</p>
+                    ${isBulk ? '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>Warning:</strong> This will delete multiple items at once.</div>' : ''}
+                `;
+
+                // Remove previous event listeners by cloning the button
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+                // Add new event listener
+                newConfirmBtn.addEventListener('click', function() {
+                    deleteItems(itemIds, isBulk);
+                    modal.hide();
+                });
+
+                modal.show();
+            }
+
+            // ============= NEW: DELETE ITEMS FUNCTION =============
+            function deleteItems(itemIds, isBulk) {
+                const url = isBulk ? '/Inventory/BulkAction' : '/Inventory/ItemAction';
+                const data = isBulk ? 
+                    { 
+                        InventoryId: inventoryId,
+                        ItemIds: itemIds.map(id => parseInt(id)),
+                        Action: 'delete'
+                    } : 
+                    {
+                        ItemId: parseInt(itemIds[0]),
+                        InventoryId: inventoryId,
+                        Action: 'delete'
+                    };
+
+                // Add anti-forgery token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['RequestVerificationToken'] = token.value;
+                }
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // Remove deleted items from UI
+                        itemIds.forEach(itemId => {
+                            const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                            if (row) {
+                                row.style.transition = 'all 0.3s ease';
+                                row.style.opacity = '0';
+                                setTimeout(() => row.remove(), 300);
+                            }
+                            selectedItems.delete(itemId.toString());
+                        });
+                        
+                        setTimeout(() => {
+                            updateToolbar();
+                            showToast('Success', result.message, 'success');
+                            
+                            // Reload if no items left
+                            if (document.querySelectorAll('.item-row').length === 0) {
+                                setTimeout(() => location.reload(), 1000);
+                            }
+                        }, 300);
+                    } else {
+                        showToast('Error', result.message || 'Failed to delete items', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error', 'An error occurred while deleting items', 'error');
+                });
+            }
+
+            // ============= EXISTING: LIKE FUNCTIONALITY =============
+            function updateLikeButton(button, itemId) {
+                fetch(`/Inventory/GetLikeStatus?itemId=${itemId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const likeCount = button.nextElementSibling;
+                        
+                        if (data.isLiked) {
+                            button.classList.remove('btn-outline-danger');
+                            button.classList.add('btn-danger');
+                        } else {
+                            button.classList.remove('btn-danger');
+                            button.classList.add('btn-outline-danger');
+                        }
+                        
+                        likeCount.textContent = data.likeCount;
+                    })
+                    .catch(error => console.error('Error updating like status:', error));
+            }
+
+            function toggleLike(button, itemId) {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                const headers = {};
+                
+                if (token) {
+                    headers['RequestVerificationToken'] = token.value;
+                }
+
+                fetch(`/Inventory/ToggleLike?itemId=${itemId}`, {
+                    method: 'POST',
+                    headers: headers
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const likeCount = button.nextElementSibling;
+                    
+                    if (data.isLiked) {
+                        button.classList.remove('btn-outline-danger');
+                        button.classList.add('btn-danger');
+                        // Animate the like
+                        button.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            button.style.transform = 'scale(1)';
+                        }, 200);
+                    } else {
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-outline-danger');
+                    }
+                    
+                    likeCount.textContent = data.likeCount;
+                })
+                .catch(error => console.error('Error toggling like:', error));
+            }
+
             // Handle like button clicks
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.like-btn')) {
@@ -196,11 +564,130 @@
                 }
             });
 
-            // Update like button appearance
-            function updateLikeButton(button, itemId) {
-                fetch(`/Inventory/GetLikeStatus?itemId=${itemId}`)
-                    .then(response => response.json())
-                    .then(data => {
+            // ============= UTILITY FUNCTIONS =============
+            function showToast(title, message, type) {
+                // Simple toast using Bootstrap alerts (you can enhance this)
+                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                const alertHtml = `
+                    <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                         style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                        <strong>${title}:</strong> ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                const alertElement = document.createElement('div');
+                alertElement.innerHTML = alertHtml;
+                document.body.appendChild(alertElement.firstElementChild);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    const alert = document.querySelector('.position-fixed.alert');
+                    if (alert) alert.remove();
+                }, 5000);
+            }
+        });
+    </script>
+    
+    <style>
+        /* Enhanced table styles */
+        .table-hover tbody tr:hover {
+            background-color: rgba(0,123,255,0.05) !important;
+        }
+
+        /* Selection styles */
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .form-check-input:indeterminate {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        /* Context menu animations */
+        .dropdown-menu {
+            animation: slideDown 0.2s ease;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Action toolbar */
+        .action-toolbar {
+            border-bottom: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        /* Button hover effects */
+        .btn {
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Like button animation */
+        .like-btn {
+            transition: all 0.3s ease;
+        }
+
+        .like-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Context menu button hover */
+        .context-menu-btn {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .context-menu-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Row selection styling */
+        .item-row {
+            transition: background-color 0.2s ease;
+        }
+
+        .item-row:has(.item-checkbox:checked) {
+            background-color: rgba(13, 110, 253, 0.1) !important;
+        }
+
+        /* Responsive improvements */
+        @@media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .action-toolbar {
+                padding: 0.5rem;
+            }
+            
+            .action-toolbar .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+}
                         const likeCount = button.nextElementSibling;
                         
                         if (data.isLiked) {

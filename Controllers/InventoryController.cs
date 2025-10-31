@@ -695,6 +695,149 @@ namespace InventoryManagement.Controllers
             return RedirectToAction("Items", new { id = item.InventoryId });
         }
 
+        // NEW: Bulk Actions for Checkbox Selection + Toolbar Pattern
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BulkAction(BulkActionViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid request");
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                switch (model.Action.ToLower())
+                {
+                    case "delete":
+                        return await HandleBulkDelete(model, user);
+                    case "edit":
+                        return await HandleBulkEdit(model, user);
+                    default:
+                        return BadRequest("Unknown action");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error performing bulk action {Action} on {Count} items", 
+                    model.Action, model.ItemIds.Count);
+                return BadRequest("An error occurred");
+            }
+        }
+
+        private async Task<IActionResult> HandleBulkDelete(BulkActionViewModel model, ApplicationUser user)
+        {
+            var itemsToDelete = await _context.Items
+                .Include(i => i.Inventory)
+                .Where(i => model.ItemIds.Contains(i.Id))
+                .ToListAsync();
+
+            // Verify user has permission to delete all selected items
+            foreach (var item in itemsToDelete)
+            {
+                var hasAccess = await HasWriteAccess(item.Inventory, user);
+                if (!hasAccess)
+                {
+                    return BadRequest($"You don't have permission to delete item {item.Id}");
+                }
+            }
+
+            _context.Items.RemoveRange(itemsToDelete);
+            await _context.SaveChangesAsync();
+
+            // Update inventory item count for each affected inventory
+            var affectedInventoryIds = itemsToDelete.Select(i => i.InventoryId).Distinct();
+            foreach (var inventoryId in affectedInventoryIds)
+            {
+                await UpdateInventoryItemCount(inventoryId);
+            }
+
+            TempData["SuccessMessage"] = $"Successfully deleted {itemsToDelete.Count} items";
+            return Ok(new { success = true, message = $"Deleted {itemsToDelete.Count} items" });
+        }
+
+        private Task<IActionResult> HandleBulkEdit(BulkActionViewModel model, ApplicationUser user)
+        {
+            // For bulk edit, we'll redirect to edit the first item
+            // In a more advanced implementation, you might want a bulk edit form
+            if (model.ItemIds.Count == 1)
+            {
+                return Task.FromResult<IActionResult>(RedirectToAction("EditItem", new { id = model.ItemIds.First() }));
+            }
+            else
+            {
+                return Task.FromResult<IActionResult>(BadRequest("Please select only one item to edit"));
+            }
+        }
+
+        // NEW: Single Item Action for Context Menu Pattern
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ItemAction(ItemActionViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid request");
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                switch (model.Action.ToLower())
+                {
+                    case "edit":
+                        return RedirectToAction("EditItem", new { id = model.ItemId });
+                    case "delete":
+                        return await HandleSingleDelete(model.ItemId, user);
+                    default:
+                        return BadRequest("Unknown action");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error performing action {Action} on item {ItemId}", 
+                    model.Action, model.ItemId);
+                return BadRequest("An error occurred");
+            }
+        }
+
+        private async Task<IActionResult> HandleSingleDelete(int itemId, ApplicationUser user)
+        {
+            var item = await _context.Items
+                .Include(i => i.Inventory)
+                .FirstOrDefaultAsync(i => i.Id == itemId);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            var hasAccess = await HasWriteAccess(item.Inventory, user);
+            if (!hasAccess)
+            {
+                return BadRequest("You don't have permission to delete this item");
+            }
+
+            _context.Items.Remove(item);
+            await _context.SaveChangesAsync();
+
+            // Update inventory item count
+            await UpdateInventoryItemCount(item.InventoryId);
+
+            return Ok(new { success = true, message = "Item deleted successfully" });
+        }
+
         // ACCESS CONTROL METHODS
 
         [HttpGet]

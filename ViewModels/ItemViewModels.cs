@@ -78,5 +78,24 @@ namespace InventoryManagement.ViewModels
         public bool CanEdit { get; set; }
         public List<ItemViewModel> Items { get; set; } = new List<ItemViewModel>();
         public List<string> ColumnHeaders { get; set; } = new List<string>();
+        
+        // NEW: For selection system
+        public List<int> SelectedItemIds { get; set; } = new List<int>();
+    }
+
+    // NEW: For bulk actions (checkbox selection + toolbar)
+    public class BulkActionViewModel
+    {
+        public int InventoryId { get; set; }
+        public List<int> ItemIds { get; set; } = new List<int>();
+        public string Action { get; set; } = string.Empty; // "edit", "delete"
+    }
+
+    // NEW: For single item actions (context menu)
+    public class ItemActionViewModel
+    {
+        public int ItemId { get; set; }
+        public int InventoryId { get; set; }
+        public string Action { get; set; } = string.Empty;
     }
 }
