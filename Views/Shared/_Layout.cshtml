@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="@System.Threading.Thread.CurrentThread.CurrentCulture.Name" data-theme="@(Context.Request.Cookies["theme"] ?? "light")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,48 +23,38 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
 <ul class="navbar-nav me-auto">
     <li class="nav-item">
-        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">@Localizer["Home"]</a>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-    </li>
-
     @if (User.Identity?.IsAuthenticated == true)
     {
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-boxes me-1"></i> Inventories
+                <i class="fas fa-boxes me-1"></i> @Localizer["MyInventories"]
             </a>
             <ul class="dropdown-menu" aria-labelledby="inventoryDropdown">
                 <li><a class="dropdown-item" asp-controller="Inventory" asp-action="MyInventories">
-                    <i class="fas fa-list me-2"></i>My Inventories
+                    <i class="fas fa-list me-2"></i>@Localizer["MyInventories"]
                 </a></li>
                 <li><a class="dropdown-item" asp-controller="Inventory" asp-action="Create">
-                    <i class="fas fa-plus me-2"></i>Create New Inventory
+                    <i class="fas fa-plus me-2"></i>@Localizer["CreateInventory"]
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><h6 class="dropdown-header">Quick Access</h6></li>
+                <li><h6 class="dropdown-header">@Localizer["ViewAll"]</h6></li>
                 <!-- Future enhancement: Recent inventories could be listed here -->
             </ul>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" asp-controller="Profile" asp-action="Index">
-                <i class="fas fa-user me-1"></i> My Profile
-            </a>
-        </li>
-        
         @if (User.IsInRole("Admin"))
         {
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-crown me-1"></i>Admin
+                    <i class="fas fa-crown me-1"></i>@Localizer["Admin"]
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index">
-                        <i class="fas fa-users-cog me-2"></i>User Management
+                        <i class="fas fa-users-cog me-2"></i>@Localizer["UserManagement"]
                     </a></li>
                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="SystemStats">
-                        <i class="fas fa-chart-bar me-2"></i>System Statistics
+                        <i class="fas fa-chart-bar me-2"></i>@Localizer["SystemStatistics"]
                     </a></li>
                 </ul>
             </li>
@@ -75,12 +65,12 @@
                     <!-- Search Form in Navbar -->
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <form class="d-flex me-2" method="get" asp-controller="Search" asp-action="Index" id="navbarSearchForm">
-                            <div class="input-group input-group-sm position-relative">
-                                <input type="search" class="form-control" placeholder="Search..." 
-                                       name="Query" id="navbarSearch" aria-label="Search" 
-                                       style="min-width: 200px;">
-                                <button class="btn btn-outline-light" type="submit">
+                        <form class="d-flex me-3" method="get" asp-controller="Search" asp-action="Index" id="navbarSearchForm">
+                            <div class="input-group input-group-sm position-relative search-container">
+                                <input type="search" class="form-control search-input" placeholder="@Localizer["Search"]" 
+                                       name="Query" id="navbarSearch" aria-label="@Localizer["Search"]" 
+                                       style="min-width: 160px;">
+                                <button class="btn search-btn" type="submit">
                                     <i class="fas fa-search"></i>
                                 </button>
                                 <div class="dropdown-menu w-100" id="quickSearchResults"></div>
@@ -89,18 +79,47 @@
                     }
                     
                     <ul class="navbar-nav">
+                        <!-- Language Switcher -->
+                        <li class="nav-item dropdown me-3">
+                            <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-globe me-1"></i>
+                                <span class="language-text d-none d-md-inline">
+                                    @(System.Threading.Thread.CurrentThread.CurrentCulture.Name == "es" ? "ES" : "EN")
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                                <li><a class="dropdown-item" href="#" data-language="en">
+                                    <i class="fas fa-flag-usa me-2"></i>English
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" data-language="es">
+                                    <i class="fas fa-flag me-2"></i>Español
+                                </a></li>
+                            </ul>
+                        </li>
+                        
+                        <!-- Theme Toggle -->
+                        <li class="nav-item me-3">
+                            <button class="btn btn-outline-light btn-sm theme-toggle" id="themeToggle">
+                                <i class="fas @(Context.Request.Cookies["theme"] == "dark" ? "fa-sun" : "fa-moon")"></i>
+                                <span class="theme-text d-none d-lg-inline ms-1">
+                                    @(Context.Request.Cookies["theme"] == "dark" ? Localizer["Light"] : Localizer["Dark"])
+                                </span>
+                            </button>
+                        </li>
+
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-user me-1"></i> @(User.Identity.Name ?? "User")
                                 </a>
-                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">My Profile</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">@Localizer["Profile"]</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                            <button type="submit" class="dropdown-item">Logout</button>
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item">@Localizer["Logout"]</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -109,10 +128,10 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">@Localizer["Login"]</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">@Localizer["Register"]</a>
                             </li>
                         }
                     </ul>
@@ -127,7 +146,14 @@
 
     <footer class="border-top footer text-muted mt-5">
         <div class="container">
-            &copy; 2024 - Inventory Management - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="row">
+                <div class="col-md-6">
+                    &copy; 2024 - Inventory Management
+                </div>
+                <div class="col-md-6 text-end">
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-decoration-none">@Localizer["Privacy"]</a>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -137,6 +163,7 @@
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/themeManager.js" asp-append-version="true"></script>
     
     @await RenderSectionAsync("Scripts", required: false)
 

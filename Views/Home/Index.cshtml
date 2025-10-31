@@ -1,17 +1,17 @@
 ﻿@model InventoryManagement.ViewModels.HomeViewModel
 @{
-    ViewData["Title"] = "Home - Inventory Management";
+    ViewData["Title"] = Localizer["Home"];
 }
 
 <div class="container-fluid">
     <!-- Hero Section -->
     <div class="row mb-5">
         <div class="col-12">
-            <div class="p-5 mb-4 bg-light rounded-3">
+            <div class="p-5 mb-4 bg-light rounded-3 hero-section">
                 <div class="container-fluid py-5">
-                    <h1 class="display-5 fw-bold">Welcome to Inventory Manager</h1>
-                    <p class="col-md-8 fs-4">A comprehensive solution for managing custom inventories with advanced features like custom ID formats, real-time collaboration, and powerful search.</p>
-                    <button class="btn btn-primary btn-lg" type="button">Get Started</button>
+                    <h1 class="display-5 fw-bold hero-title">@Localizer["Welcome"]</h1>
+                    <p class="col-md-8 fs-4 hero-text">A comprehensive solution for managing custom inventories with advanced features like custom ID formats, real-time collaboration, and powerful search.</p>
+                    <button class="btn btn-primary btn-lg" type="button">@Localizer["ViewAll"]</button>
                 </div>
             </div>
         </div>
@@ -24,7 +24,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title">Total Inventories</h5>
+                            <h5 class="card-title">@Localizer["TotalInventories"]</h5>
                             <h2 class="mb-0">15</h2>
                         </div>
                         <div class="align-self-center">
@@ -39,7 +39,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title">Total Items</h5>
+                            <h5 class="card-title">@Localizer["TotalItems"]</h5>
                             <h2 class="mb-0">658</h2>
                         </div>
                         <div class="align-self-center">
@@ -54,7 +54,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title">Active Users</h5>
+                            <h5 class="card-title">@Localizer["ActiveUsers"]</h5>
                             <h2 class="mb-0">24</h2>
                         </div>
                         <div class="align-self-center">
@@ -69,7 +69,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h5 class="card-title">Categories</h5>
+                            <h5 class="card-title">@Localizer["Categories"]</h5>
                             <h2 class="mb-0">8</h2>
                         </div>
                         <div class="align-self-center">
@@ -87,7 +87,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Latest Inventories</h5>
+                    <h5 class="card-title mb-0">@Localizer["LatestInventories"]</h5>
                     <span class="badge bg-light text-primary">@Model.LatestInventories.Count</span>
                 </div>
                 <div class="card-body p-0">
@@ -95,10 +95,10 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Inventory</th>
-                                    <th>Creator</th>
-                                    <th>Items</th>
-                                    <th>Created</th>
+                                    <th>@Localizer["MyInventories"]</th>
+                                    <th>@Localizer["Creator"]</th>
+                                    <th>@Localizer["Items"]</th>
+                                    <th>@Localizer["Created"]</th>
                                 </tr>
                             </thead>
                             <tbody>

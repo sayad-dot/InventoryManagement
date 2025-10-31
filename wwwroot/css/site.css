@@ -1,65 +1,472 @@
-/* Theme Variables */
+/* Light theme variables */
 :root {
-  --primary-color: #007bff;
-  --secondary-color: #6c757d;
-  --success-color: #28a745;
-  --warning-color: #ffc107;
-  --danger-color: #dc3545;
-  --light-color: #f8f9fa;
-  --dark-color: #343a40;
-  --body-bg: #ffffff;
-  --body-color: #212529;
-  --card-bg: #ffffff;
-  --card-border: rgba(0, 0, 0, 0.125);
-  --header-bg: #007bff;
-  --footer-bg: #f8f9fa;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #adb5bd;
+    --border-color: #dee2e6;
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --card-bg: #ffffff;
+    --header-bg: #007bff;
+    --footer-bg: #f8f9fa;
+    --hero-bg: #f8f9fa;
+    --hero-text: #212529;
+    --btn-light-bg: #f8f9fa;
+    --btn-light-text: #212529;
+    --btn-light-border: #f8f9fa;
+    --search-bg: #ffffff;
+    --search-text: #212529;
+    --search-btn-bg: rgba(255, 255, 255, 0.1);
+    --search-btn-border: rgba(255, 255, 255, 0.25);
+    --navbar-text: rgba(255, 255, 255, 0.9);
 }
 
-[data-bs-theme="dark"] {
-  --primary-color: #0d6efd;
-  --secondary-color: #6c757d;
-  --success-color: #198754;
-  --warning-color: #ffc107;
-  --danger-color: #dc3545;
-  --light-color: #f8f9fa;
-  --dark-color: #dee2e6;
-  --body-bg: #212529;
-  --body-color: #f8f9fa;
-  --card-bg: #343a40;
-  --card-border: #495057;
-  --header-bg: #0d6efd;
-  --footer-bg: #343a40;
+/* Dark theme variables */
+[data-theme="dark"] {
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #2d2d2d;
+    --text-primary: #e9ecef;
+    --text-secondary: #adb5bd;
+    --text-muted: #6c757d;
+    --border-color: #495057;
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+    --shadow: 0 0.125rem 0.25rem rgba(255, 255, 255, 0.1);
+    --card-bg: #1e1e1e;
+    --header-bg: #1a1a2e;
+    --footer-bg: #1e1e1e;
+    --hero-bg: #2d2d2d;
+    --hero-text: #e9ecef;
+    --btn-light-bg: #495057;
+    --btn-light-text: #e9ecef;
+    --btn-light-border: #495057;
+    --search-bg: #2d2d2d;
+    --search-text: #e9ecef;
+    --search-btn-bg: rgba(255, 255, 255, 0.1);
+    --search-btn-border: rgba(255, 255, 255, 0.25);
+    --navbar-text: rgba(255, 255, 255, 0.9);
 }
 
-/* Apply theme variables */
+/* Base styles using CSS variables */
 body {
-  background-color: var(--body-bg);
-  color: var(--body-color);
-  transition: all 0.3s ease;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .card {
-  background-color: var(--card-bg);
-  border-color: var(--card-border);
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow);
 }
 
-.navbar {
-  background-color: var(--header-bg) !important;
+.navbar-dark {
+    background-color: var(--header-bg) !important;
 }
 
-footer {
-  background-color: var(--footer-bg) !important;
+.footer {
+    background-color: var(--footer-bg) !important;
+}
+
+.table {
+    color: var(--text-primary);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: var(--bg-secondary);
+}
+
+.form-control {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.form-control:focus {
+    background-color: var(--bg-primary);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+.form-select {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.dropdown-menu {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.dropdown-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Theme transition smoothness */
+* {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom badge colors for dark theme */
+[data-theme="dark"] .badge.bg-light {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .alert-light {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Hero section styling */
+.bg-light {
+    background-color: var(--hero-bg) !important;
+    color: var(--hero-text) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-light {
+    background-color: var(--btn-light-bg) !important;
+    border-color: var(--btn-light-border) !important;
+    color: var(--btn-light-text) !important;
+}
+
+/* Navbar improvements */
+.navbar-dark {
+    background-color: var(--header-bg) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: white !important;
+}
+
+/* Footer improvements */
+.footer {
+    background-color: var(--footer-bg) !important;
+    color: var(--text-secondary) !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+
+/* Card improvements */
+.card-header.bg-primary {
+    background-color: var(--primary-color) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* Table improvements */
+.table-light {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table-light th {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Text color improvements */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Bootstrap component overrides for dark theme */
+[data-theme="dark"] .text-white {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .bg-warning {
+    background-color: #856404 !important;
+}
+
+[data-theme="dark"] .bg-info {
+    background-color: #055160 !important;
+}
+
+/* Hero section specific styles */
+.hero-section {
+    background-color: var(--hero-bg) !important;
+    border: 1px solid var(--border-color);
+}
+
+.hero-title {
+    color: var(--text-primary) !important;
+}
+
+.hero-text {
+    color: var(--text-secondary) !important;
+}
+
+/* Additional spacing and layout improvements */
+.navbar-nav {
+    align-items: center;
+}
+
+.navbar-nav .nav-item {
+    margin-right: 0.5rem;
+}
+
+.language-switcher .dropdown-toggle,
+.theme-toggle {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Improve button spacing in navbar */
+.navbar-nav .nav-item .btn {
+    margin: 0;
+}
+
+/* Make sure all elements are properly themed */
+.container-fluid {
+    background-color: var(--bg-primary);
+}
+
+/* Statistics card improvements */
+.card.text-white.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.card.text-white.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.card.text-white.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: #212529 !important;
+}
+
+.card.text-white.bg-info {
+    background-color: var(--info-color) !important;
+}
+
+[data-theme="dark"] .card.text-white.bg-warning {
+    background-color: #856404 !important;
+    color: var(--text-primary) !important;
+}
+
+/* Search container specific styles */
+.search-container {
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    background-color: var(--search-bg) !important;
+    border-color: var(--search-btn-border) !important;
+    color: var(--search-text) !important;
+    border-right: none !important;
+}
+
+.search-input:focus {
+    background-color: var(--search-bg) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--search-text) !important;
+    box-shadow: none !important;
+}
+
+.search-input::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.search-btn {
+    background-color: var(--search-btn-bg) !important;
+    border-color: var(--search-btn-border) !important;
+    color: var(--navbar-text) !important;
+    border-left: none !important;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-color: var(--search-btn-border) !important;
+    color: white !important;
+}
+
+/* Navbar improvements for better spacing */
+.navbar-nav .nav-item {
+    display: flex;
+    align-items: center;
+}
+
+.navbar .container {
+    position: relative;
+}
+
+/* Fix dropdown positioning in navbar */
+.navbar-nav .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: auto;
+}
+
+/* Improve theme toggle button */
+.theme-toggle {
+    border: 1px solid var(--search-btn-border) !important;
+    background: var(--search-btn-bg) !important;
+    color: var(--navbar-text) !important;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+    height: calc(1.5em + 0.75rem + 2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Language dropdown improvements */
+.nav-link.dropdown-toggle {
+    color: var(--navbar-text) !important;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link.dropdown-toggle:hover {
+    color: white !important;
+}
+
+/* Fix input group alignment */
+.input-group-sm > .form-control,
+.input-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+.input-group > .form-control:not(:last-child),
+.input-group > .btn:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group > .form-control:not(:first-child),
+.input-group > .btn:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Responsive improvements */
+@media (max-width: 991px) {
+    .search-container {
+        min-width: 140px;
+    }
+    
+    .search-input {
+        min-width: 100px !important;
+    }
+    
+    .theme-text,
+    .language-text {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .navbar-nav .me-3 {
+        margin-right: 1rem !important;
+    }
+    
+    .search-container {
+        min-width: 120px;
+    }
 }
 
 /* Custom styles */
 .tag-cloud .tag-item {
-  transition: all 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .tag-cloud .tag-item:hover {
-  transform: translateY(-2px);
+    transform: translateY(-2px);
 }
 
 .table-hover tbody tr:hover {
-  background-color: rgba(var(--primary-color), 0.1);
+    background-color: var(--bg-secondary);
+}
+
+/* Theme toggle button styles */
+.theme-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .theme-toggle {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Language switcher styles */
+.language-switcher .dropdown-toggle {
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.language-switcher .dropdown-menu {
+    min-width: auto;
+}
+
+/* Make sure dropdown menus work in dark theme */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }

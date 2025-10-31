@@ -2,17 +2,49 @@ using InventoryManagement.Data;
 using InventoryManagement.Hubs;
 using InventoryManagement.Models;
 using InventoryManagement.Services;
+using InventoryManagement.Resources;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.Globalization;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllersWithViews();
+// Add localization services
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[]
+    {
+        new CultureInfo("en"),
+        new CultureInfo("es") // Spanish
+    };
+
+    options.DefaultRequestCulture = new RequestCulture("en");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+    
+    // Store culture in cookie
+    options.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider());
+});
+
+// Add services to the container with localization
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization(options =>
+    {
+        options.DataAnnotationLocalizerProvider = (type, factory) =>
+            factory.Create(typeof(SharedResource));
+    });
 
 // Add SignalR services
 builder.Services.AddSignalR();
+
+// Add HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
 // Add custom services
 builder.Services.AddScoped<IAccessControlService, AccessControlService>();
@@ -20,6 +52,7 @@ builder.Services.AddScoped<IDiscussionService, DiscussionService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+builder.Services.AddScoped<ILocalizationService, LocalizationService>();
 
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -126,6 +159,11 @@ app.Use(async (context, next) =>
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Add localization middleware
+var localizationOptions = app.Services.GetService<IOptions<RequestLocalizationOptions>>();
+app.UseRequestLocalization(localizationOptions!.Value);
+
 app.UseRouting();
 
 // Add Authentication & Authorization middleware
