@@ -110,12 +110,6 @@ namespace InventoryManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleAdmin(string userId)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser?.Id == userId)
-            {
-                return BadRequest("You cannot change your own admin status.");
-            }
-
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
