@@ -470,3 +470,275 @@ body {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
 }
+/* ========================================
+   COMPREHENSIVE DARK MODE TEXT FIXES
+   ======================================== */
+
+/* Form labels and text elements */
+[data-theme="dark"] .form-label,
+[data-theme="dark"] label {
+    color: var(--text-primary) !important;
+}
+
+/* Headings - make them bright white in dark mode */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: var(--text-primary) !important;
+}
+
+/* Card titles and headers */
+[data-theme="dark"] .card-title {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .card-header {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* Keep colored headers with white text */
+[data-theme="dark"] .card-header.bg-primary,
+[data-theme="dark"] .card-header.bg-success,
+[data-theme="dark"] .card-header.bg-info,
+[data-theme="dark"] .card-header.bg-warning,
+[data-theme="dark"] .card-header.bg-danger,
+[data-theme="dark"] .card-header.text-white {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .card-header strong,
+[data-theme="dark"] .card-header h6,
+[data-theme="dark"] .card-header i {
+    color: inherit !important;
+}
+
+/* Small text and form text */
+[data-theme="dark"] small,
+[data-theme="dark"] .small,
+[data-theme="dark"] .form-text {
+    color: var(--text-secondary) !important;
+}
+
+/* Text color classes */
+[data-theme="dark"] .text-success {
+    color: #4ade80 !important;
+}
+
+[data-theme="dark"] .text-info {
+    color: #22d3ee !important;
+}
+
+[data-theme="dark"] .form-text.text-success {
+    color: #4ade80 !important;
+}
+
+/* Input placeholders */
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.7;
+}
+
+/* Form check labels (checkbox/radio) */
+[data-theme="dark"] .form-check-label {
+    color: var(--text-primary) !important;
+}
+
+/* HR separators */
+[data-theme="dark"] hr {
+    border-color: var(--border-color) !important;
+    opacity: 0.5;
+}
+
+/* Alert boxes */
+[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 202, 240, 0.15) !important;
+    border-color: rgba(13, 202, 240, 0.3) !important;
+    color: #79dae8 !important;
+}
+
+[data-theme="dark"] .alert-info .alert-link {
+    color: #9fe7f5 !important;
+}
+
+[data-theme="dark"] .alert-info i {
+    color: #79dae8 !important;
+}
+
+/* Badges - ensure visibility */
+[data-theme="dark"] .badge.bg-success {
+    background-color: #198754 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .badge.bg-primary {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+[data-theme="dark"] .badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .badge.bg-secondary {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+}
+
+/* Table headers and cells */
+[data-theme="dark"] .table-dark,
+[data-theme="dark"] .table thead {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table-dark th,
+[data-theme="dark"] .table thead th {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table-dark td {
+    border-color: var(--border-color) !important;
+}
+
+/* Table rows - fix white background issue */
+[data-theme="dark"] .table tbody tr {
+    color: var(--text-primary) !important;
+    background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) {
+    background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .table td {
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Table hover effect */
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.075) !important;
+}
+
+/* Paragraph text */
+[data-theme="dark"] p {
+    color: var(--text-primary) !important;
+}
+
+/* Span elements */
+[data-theme="dark"] .card-body span,
+[data-theme="dark"] .card span {
+    color: var(--text-primary);
+}
+
+/* Strong/bold text */
+[data-theme="dark"] strong,
+[data-theme="dark"] b {
+    color: var(--text-primary) !important;
+}
+
+/* List items */
+[data-theme="dark"] li {
+    color: var(--text-primary);
+}
+
+/* Links in cards */
+[data-theme="dark"] .card a:not(.btn) {
+    color: #3b82f6;
+}
+
+[data-theme="dark"] .card a:not(.btn):hover {
+    color: #60a5fa;
+}
+
+/* Category and tag display */
+[data-theme="dark"] .badge {
+    color: inherit;
+}
+
+/* Ensure all card text is visible */
+[data-theme="dark"] .card-body {
+    color: var(--text-primary) !important;
+}
+
+/* Fix for any remaining text elements */
+[data-theme="dark"] .container,
+[data-theme="dark"] .container-fluid {
+    color: var(--text-primary);
+}
+
+/* Inventory details specific */
+[data-theme="dark"] .card-text {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] dt {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] dd {
+    color: var(--text-secondary) !important;
+}
+
+/* ========================================
+   ADMIN PAGES SPECIFIC FIXES
+   ======================================== */
+
+/* Fix white background in admin tables */
+[data-theme="dark"] .table {
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .table tbody {
+    background-color: transparent !important;
+}
+
+/* Force dark background for all table rows in admin pages */
+[data-theme="dark"] .table > :not(caption) > * > * {
+    background-color: var(--card-bg) !important;
+}
+
+/* Ensure striped tables work properly */
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) > * {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(even) > * {
+    background-color: var(--card-bg) !important;
+}
+
+/* Fix any remaining white backgrounds */
+[data-theme="dark"] .card-body .table,
+[data-theme="dark"] .card-body .table-responsive,
+[data-theme="dark"] .table-responsive {
+    background-color: transparent !important;
+}
+
+/* Ensure table wrapper doesn't have white background */
+[data-theme="dark"] .table-responsive {
+    background-color: transparent !important;
+}
