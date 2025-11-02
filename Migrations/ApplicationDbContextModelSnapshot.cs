@@ -115,7 +115,7 @@ namespace InventoryManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
 
                     b.HasData(
                         new
@@ -194,7 +194,7 @@ namespace InventoryManagement.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Discussions");
+                    b.ToTable("Discussions", (string)null);
                 });
 
             modelBuilder.Entity("InventoryManagement.Models.Inventory", b =>
@@ -350,7 +350,7 @@ namespace InventoryManagement.Migrations
 
                     b.HasIndex("CreatorId");
 
-                    b.ToTable("Inventories");
+                    b.ToTable("Inventories", (string)null);
                 });
 
             modelBuilder.Entity("InventoryManagement.Models.InventoryAccess", b =>
@@ -377,7 +377,7 @@ namespace InventoryManagement.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("InventoryAccesses");
+                    b.ToTable("InventoryAccesses", (string)null);
                 });
 
             modelBuilder.Entity("InventoryManagement.Models.InventoryTag", b =>
@@ -395,7 +395,7 @@ namespace InventoryManagement.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("InventoryTags");
+                    b.ToTable("InventoryTags", (string)null);
                 });
 
             modelBuilder.Entity("InventoryManagement.Models.Item", b =>
@@ -470,7 +470,7 @@ namespace InventoryManagement.Migrations
 
                     b.HasIndex("InventoryId");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("InventoryManagement.Models.ItemLike", b =>
@@ -498,7 +498,7 @@ namespace InventoryManagement.Migrations
                     b.HasIndex("ItemId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("ItemLikes");
+                    b.ToTable("ItemLikes", (string)null);
                 });
 
             modelBuilder.Entity("InventoryManagement.Models.Tag", b =>
@@ -516,7 +516,7 @@ namespace InventoryManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
 
                     b.HasData(
                         new

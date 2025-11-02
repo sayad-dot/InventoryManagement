@@ -76,10 +76,9 @@
                                                 </div>
                                             </th>
                                         }
-                                        <th>Custom ID</th>
                                         @foreach (var header in Model.ColumnHeaders)
                                         {
-                                            if (header != "Actions") // Remove Actions column header
+                                            if (header != "Actions")
                                             {
                                                 <th>@header</th>
                                             }
@@ -104,7 +103,14 @@
                                                 </td>
                                             }
                                             <td>
-                                                <strong>@(item.CustomId ?? "N/A")</strong>
+                                                @if (!string.IsNullOrEmpty(item.CustomId))
+                                                {
+                                                    <strong class="font-monospace text-primary">@item.CustomId</strong>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted fst-italic">No ID</span>
+                                                }
                                             </td>
                                             @foreach (var field in item.CustomFields)
                                             {
@@ -685,62 +691,6 @@
                 padding: 0.25rem 0.5rem;
                 font-size: 0.75rem;
             }
-        }
-    </style>
-}
-                        const likeCount = button.nextElementSibling;
-                        
-                        if (data.isLiked) {
-                            button.classList.remove('btn-outline-danger');
-                            button.classList.add('btn-danger');
-                        } else {
-                            button.classList.remove('btn-danger');
-                            button.classList.add('btn-outline-danger');
-                        }
-                        
-                        likeCount.textContent = data.likeCount;
-                    })
-                    .catch(error => console.error('Error updating like status:', error));
-            }
-
-            // Toggle like status
-            function toggleLike(button, itemId) {
-                fetch(`/Inventory/ToggleLike?itemId=${itemId}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const likeCount = button.nextElementSibling;
-                    
-                    if (data.isLiked) {
-                        button.classList.remove('btn-outline-danger');
-                        button.classList.add('btn-danger');
-                        // Add animation
-                        button.style.transform = 'scale(1.2)';
-                        setTimeout(() => {
-                            button.style.transform = 'scale(1)';
-                        }, 300);
-                    } else {
-                        button.classList.remove('btn-danger');
-                        button.classList.add('btn-outline-danger');
-                    }
-                    
-                    likeCount.textContent = data.likeCount;
-                })
-                .catch(error => console.error('Error toggling like:', error));
-            }
-        });
-    </script>
-    
-    <style>
-        .like-btn {
-            transition: all 0.3s ease;
-        }
-        .like-btn:hover {
-            transform: scale(1.1);
         }
     </style>
 }

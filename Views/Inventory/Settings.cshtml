@@ -22,6 +22,11 @@
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="customid-tab" data-bs-toggle="tab" data-bs-target="#customid" type="button" role="tab">
+                            Custom ID
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <button class="nav-link" id="fields-tab" data-bs-toggle="tab" data-bs-target="#fields" type="button" role="tab">
                             Custom Fields
                         </button>
@@ -85,6 +90,122 @@
                                 </div>
                                 
                                 <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Custom ID Tab -->
+                    <div class="tab-pane fade" id="customid" role="tabpanel">
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h5><i class="fas fa-fingerprint me-2"></i>Custom ID Format Configuration</h5>
+                                <p class="text-muted">
+                                    Define how item IDs are automatically generated for this inventory. 
+                                    Build your ID format by adding elements and arranging them in your desired order.
+                                </p>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <strong>Note:</strong> Each item will have a globally unique internal ID (hidden from UI) and a custom ID unique to this inventory.
+                                </div>
+                            </div>
+
+                            <form method="post" asp-action="UpdateCustomIdFormat" id="customIdForm">
+                                <input type="hidden" asp-for="Id" />
+                                <input type="hidden" id="customIdFormatJson" name="customIdFormatJson" value="" />
+
+                                <!-- Element Type Selection -->
+                                <div class="card mb-3 border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add ID Elements</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-2">
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="fixed">
+                                                    <i class="fas fa-font"></i> Fixed Text
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="random20">
+                                                    <i class="fas fa-dice"></i> 20-bit Random
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="random32">
+                                                    <i class="fas fa-dice-d20"></i> 32-bit Random
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="random6">
+                                                    <i class="fas fa-hashtag"></i> 6-digit Random
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="random9">
+                                                    <i class="fas fa-hashtag"></i> 9-digit Random
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="guid">
+                                                    <i class="fas fa-key"></i> GUID
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="datetime">
+                                                    <i class="fas fa-calendar"></i> Date/Time
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-primary w-100 add-element" data-type="sequence">
+                                                    <i class="fas fa-sort-numeric-up"></i> Sequence
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="form-label">Separator Character</label>
+                                            <input type="text" id="separator" class="form-control" value="-" maxlength="3" placeholder="-">
+                                            <small class="text-muted">Character(s) between ID elements (e.g., "-", "_", "")</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ID Elements Container (Drag & Drop) -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-list me-2"></i>ID Format Structure (Drag to reorder)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="idElementsContainer" class="sortable-container">
+                                            <!-- Elements will be added here dynamically -->
+                                            <div class="text-muted text-center py-4" id="emptyMessage">
+                                                <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                                <p>Click buttons above to add ID elements</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Preview -->
+                                <div class="card mb-3 border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0"><i class="fas fa-eye me-2"></i>Preview</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-light border mb-0">
+                                            <strong>Example ID:</strong> 
+                                            <span id="previewText" class="ms-2 font-monospace fs-5 text-primary">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>Save ID Format
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="clearFormat">
+                                        <i class="fas fa-trash me-1"></i>Clear All
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -223,7 +344,295 @@
             // Initialize field order
             updateFieldOrder();
         });
+
+        // ============================================
+        // Custom ID Format Management
+        // ============================================
+        let idElements = [];
+        let elementCounter = 0;
+
+        // Element type metadata
+        const elementTypes = {
+            'fixed': { name: 'Fixed Text', icon: 'fa-font', color: 'primary', preview: 'TEXT' },
+            'random20': { name: '20-bit Random', icon: 'fa-dice', color: 'info', preview: 'A1B2C' },
+            'random32': { name: '32-bit Random', icon: 'fa-dice-d20', color: 'info', preview: 'E74FA329' },
+            'random6': { name: '6-digit Random', icon: 'fa-hashtag', color: 'warning', preview: '123456' },
+            'random9': { name: '9-digit Random', icon: 'fa-hashtag', color: 'warning', preview: '987654321' },
+            'guid': { name: 'GUID', icon: 'fa-key', color: 'secondary', preview: 'A1B2C3D4...' },
+            'datetime': { name: 'Date/Time', icon: 'fa-calendar', color: 'success', preview: '20251102' },
+            'sequence': { name: 'Sequence', icon: 'fa-sort-numeric-up', color: 'danger', preview: '001' }
+        };
+
+        // Load existing format if any
+        const existingFormat = '@Html.Raw(Model.CustomIdFormat ?? "")';
+        if (existingFormat) {
+            try {
+                const config = JSON.parse(existingFormat);
+                if (config.elements && Array.isArray(config.elements)) {
+                    idElements = config.elements;
+                    document.getElementById('separator').value = config.separator || '-';
+                    renderElements();
+                }
+            } catch (e) {
+                console.error('Error parsing existing format:', e);
+            }
+        }
+
+        // Add element button handlers
+        document.querySelectorAll('.add-element').forEach(button => {
+            button.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                addElement(type);
+            });
+        });
+
+        // Clear format button
+        document.getElementById('clearFormat')?.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the entire ID format?')) {
+                idElements = [];
+                elementCounter = 0;
+                renderElements();
+                updatePreview();
+            }
+        });
+
+        // Separator change handler
+        document.getElementById('separator')?.addEventListener('input', function() {
+            updatePreview();
+        });
+
+        // Form submit handler
+        document.getElementById('customIdForm')?.addEventListener('submit', function(e) {
+            const config = {
+                elements: idElements,
+                separator: document.getElementById('separator').value || '-'
+            };
+            document.getElementById('customIdFormatJson').value = JSON.stringify(config);
+        });
+
+        // Add a new element
+        function addElement(type) {
+            const element = {
+                type: type,
+                value: type === 'fixed' ? 'TEXT' : (type === 'datetime' ? 'yyyyMMdd' : ''),
+                order: idElements.length,
+                options: type === 'sequence' ? JSON.stringify({ leadingZeros: 3 }) : null,
+                id: ++elementCounter
+            };
+            idElements.push(element);
+            renderElements();
+            updatePreview();
+        }
+
+        // Remove element
+        function removeElement(id) {
+            idElements = idElements.filter(e => e.id !== id);
+            // Reorder remaining elements
+            idElements.forEach((el, idx) => el.order = idx);
+            renderElements();
+            updatePreview();
+        }
+
+        // Update element value
+        function updateElementValue(id, value) {
+            const element = idElements.find(e => e.id === id);
+            if (element) {
+                element.value = value;
+                updatePreview();
+            }
+        }
+
+        // Render all elements
+        function renderElements() {
+            const container = document.getElementById('idElementsContainer');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            if (idElements.length === 0) {
+                emptyMessage.style.display = 'block';
+                container.innerHTML = '';
+                container.appendChild(emptyMessage);
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+            container.innerHTML = '';
+            
+            idElements.sort((a, b) => a.order - b.order).forEach(element => {
+                const meta = elementTypes[element.type];
+                const card = document.createElement('div');
+                card.className = 'card mb-2 element-card';
+                card.draggable = true;
+                card.dataset.elementId = element.id;
+                
+                let valueInput = '';
+                if (element.type === 'fixed') {
+                    valueInput = `
+                        <div class="col-md-6">
+                            <input type="text" class="form-control form-control-sm" 
+                                   value="${element.value || ''}" 
+                                   placeholder="Enter text"
+                                   onchange="updateElementValue(${element.id}, this.value)">
+                        </div>`;
+                } else if (element.type === 'datetime') {
+                    valueInput = `
+                        <div class="col-md-6">
+                            <input type="text" class="form-control form-control-sm" 
+                                   value="${element.value || 'yyyyMMdd'}" 
+                                   placeholder="Format: yyyyMMdd"
+                                   onchange="updateElementValue(${element.id}, this.value)">
+                            <small class="text-muted">e.g., yyyyMMdd, yyyy-MM-dd</small>
+                        </div>`;
+                } else if (element.type === 'sequence') {
+                    const opts = element.options ? JSON.parse(element.options) : { leadingZeros: 3 };
+                    valueInput = `
+                        <div class="col-md-6">
+                            <label class="form-label form-label-sm">Leading Zeros</label>
+                            <input type="number" class="form-control form-control-sm" 
+                                   value="${opts.leadingZeros || 3}" 
+                                   min="1" max="9"
+                                   onchange="updateSequenceOptions(${element.id}, this.value)">
+                        </div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="card-body p-2">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <i class="fas fa-grip-vertical text-muted" style="cursor: grab;"></i>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-${meta.color}">
+                                    <i class="fas ${meta.icon} me-1"></i>${meta.name}
+                                </span>
+                            </div>
+                            ${valueInput}
+                            <div class="col-auto ms-auto">
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="removeElement(${element.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Drag and drop handlers
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragend', handleDragEnd);
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Update sequence options
+        window.updateSequenceOptions = function(id, leadingZeros) {
+            const element = idElements.find(e => e.id === id);
+            if (element) {
+                element.options = JSON.stringify({ leadingZeros: parseInt(leadingZeros) || 3 });
+                updatePreview();
+            }
+        };
+
+        window.updateElementValue = updateElementValue;
+        window.removeElement = removeElement;
+
+        // Drag and drop implementation
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (draggedElement !== this) {
+                const draggedId = parseInt(draggedElement.dataset.elementId);
+                const targetId = parseInt(this.dataset.elementId);
+                
+                const draggedIdx = idElements.findIndex(e => e.id === draggedId);
+                const targetIdx = idElements.findIndex(e => e.id === targetId);
+                
+                // Swap elements
+                const temp = idElements[draggedIdx];
+                idElements[draggedIdx] = idElements[targetIdx];
+                idElements[targetIdx] = temp;
+                
+                // Update orders
+                idElements.forEach((el, idx) => el.order = idx);
+                
+                renderElements();
+                updatePreview();
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+            draggedElement = null;
+        }
+
+        // Update preview
+        function updatePreview() {
+            const separator = document.getElementById('separator').value || '-';
+            if (idElements.length === 0) {
+                document.getElementById('previewText').textContent = '-';
+                return;
+            }
+
+            const parts = idElements
+                .sort((a, b) => a.order - b.order)
+                .map(element => {
+                    const meta = elementTypes[element.type];
+                    if (element.type === 'fixed') {
+                        return element.value || 'TEXT';
+                    } else if (element.type === 'datetime') {
+                        // Show current date with format
+                        const now = new Date();
+                        const format = element.value || 'yyyyMMdd';
+                        // Simple preview - just show the format or actual date
+                        if (format === 'yyyyMMdd') return now.toISOString().slice(0,10).replace(/-/g, '');
+                        if (format === 'yyyy-MM-dd') return now.toISOString().slice(0,10);
+                        return format;
+                    }
+                    return meta.preview;
+                });
+            
+            document.getElementById('previewText').textContent = parts.join(separator);
+        }
+
+        // Initialize preview
+        updatePreview();
     </script>
+    <style>
+        .sortable-container {
+            min-height: 100px;
+        }
+        .element-card {
+            cursor: move;
+            transition: all 0.2s;
+        }
+        .element-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .element-card.dragging {
+            opacity: 0.4;
+        }
+    </style>
 }
 
 @functions {

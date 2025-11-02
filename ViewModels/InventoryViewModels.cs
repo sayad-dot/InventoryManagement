@@ -71,6 +71,9 @@ namespace InventoryManagement.ViewModels
         public string? ImageUrl { get; set; }
         public bool IsPublic { get; set; }
 
+        // Custom ID Format
+        public string? CustomIdFormat { get; set; }
+
         // Custom Fields
         public List<CustomFieldViewModel> CustomFields { get; set; } = new List<CustomFieldViewModel>();
         public string FieldOrder { get; set; } = string.Empty;

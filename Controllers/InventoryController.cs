@@ -19,6 +19,7 @@ namespace InventoryManagement.Controllers
         private readonly IDiscussionService _discussionService;
         private readonly ILikeService _likeService;
         private readonly IStatisticsService _statisticsService;
+        private readonly CustomIdGeneratorService _customIdGenerator;
 
         public InventoryController(
             ApplicationDbContext context,
@@ -27,7 +28,8 @@ namespace InventoryManagement.Controllers
             IAccessControlService accessControlService,
             IDiscussionService discussionService,
             ILikeService likeService,
-            IStatisticsService statisticsService)
+            IStatisticsService statisticsService,
+            CustomIdGeneratorService customIdGenerator)
         {
             _context = context;
             _userManager = userManager;
@@ -36,6 +38,7 @@ namespace InventoryManagement.Controllers
             _discussionService = discussionService;
             _likeService = likeService;
             _statisticsService = statisticsService;
+            _customIdGenerator = customIdGenerator;
         }
 
         [HttpGet]
@@ -278,6 +281,7 @@ namespace InventoryManagement.Controllers
                 CategoryId = inventory.CategoryId,
                 ImageUrl = inventory.ImageUrl,
                 IsPublic = inventory.IsPublic,
+                CustomIdFormat = inventory.CustomIdFormat,
                 AvailableCategories = await _context.Categories.OrderBy(c => c.Name).ToListAsync(),
                 FieldOrder = inventory.FieldOrder ?? string.Empty
             };
@@ -374,7 +378,94 @@ namespace InventoryManagement.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateCustomIdFormat(int id, string customIdFormatJson)
+        {
+            var inventory = await _context.Inventories.FindAsync(id);
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (inventory.CreatorId != user?.Id && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            try
+            {
+                // Validate JSON format
+                if (!string.IsNullOrWhiteSpace(customIdFormatJson))
+                {
+                    try
+                    {
+                        var config = System.Text.Json.JsonSerializer.Deserialize<CustomIdFormatConfig>(customIdFormatJson);
+                        if (config == null)
+                        {
+                            throw new Exception("Invalid format configuration");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Invalid Custom ID format JSON");
+                        TempData["ErrorMessage"] = "Invalid Custom ID format. Please try again.";
+                        return RedirectToAction("Settings", new { id });
+                    }
+                }
+
+                inventory.CustomIdFormat = customIdFormatJson;
+                inventory.UpdatedAt = DateTime.UtcNow;
+
+                _context.Inventories.Update(inventory);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Custom ID format updated successfully!";
+                return RedirectToAction("Settings", new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating custom ID format for inventory {InventoryId}", id);
+                TempData["ErrorMessage"] = "An error occurred while updating custom ID format. Please try again.";
+                return RedirectToAction("Settings", new { id });
+            }
+        }
+
         // ITEM MANAGEMENT METHODS
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateCustomId(int inventoryId)
+        {
+            try
+            {
+                var inventory = await _context.Inventories.FindAsync(inventoryId);
+                if (inventory == null)
+                {
+                    return Json(new { success = false, message = "Inventory not found" });
+                }
+
+                var user = await _userManager.GetUserAsync(User);
+                var hasAccess = await HasWriteAccess(inventory, user);
+                if (!hasAccess)
+                {
+                    return Json(new { success = false, message = "Access denied" });
+                }
+
+                if (string.IsNullOrWhiteSpace(inventory.CustomIdFormat))
+                {
+                    return Json(new { success = false, message = "No custom ID format configured for this inventory" });
+                }
+
+                var customId = await _customIdGenerator.GenerateCustomIdAsync(inventoryId);
+                return Json(new { success = true, customId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating custom ID for inventory {InventoryId}", inventoryId);
+                return Json(new { success = false, message = "Error generating ID" });
+            }
+        }
 
         [HttpGet]
         public async Task<IActionResult> Items(int id)
@@ -429,11 +520,27 @@ namespace InventoryManagement.Controllers
                 return RedirectToAction("AccessDenied", "Account");
             }
 
+            // Generate suggested Custom ID if format is configured
+            string? suggestedCustomId = null;
+            if (!string.IsNullOrWhiteSpace(inventory.CustomIdFormat))
+            {
+                try
+                {
+                    suggestedCustomId = await _customIdGenerator.GenerateCustomIdAsync(inventory.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to generate suggested CustomId for inventory {InventoryId}", inventory.Id);
+                }
+            }
+
             var viewModel = new CreateItemViewModel
             {
                 InventoryId = inventory.Id,
                 InventoryTitle = inventory.Title,
-                CustomFields = GetActiveCustomFieldsForForm(inventory)
+                CustomId = suggestedCustomId,
+                CustomFields = GetActiveCustomFieldsForForm(inventory),
+                HasCustomIdFormat = !string.IsNullOrWhiteSpace(inventory.CustomIdFormat)
             };
 
             return View(viewModel);
@@ -489,16 +596,22 @@ namespace InventoryManagement.Controllers
             {
                 try
                 {
+                    // Auto-generate CustomId if not provided and format exists
+                    if (string.IsNullOrWhiteSpace(model.CustomId) && !string.IsNullOrWhiteSpace(inventory.CustomIdFormat))
+                    {
+                        model.CustomId = await _customIdGenerator.GenerateCustomIdAsync(inventory.Id);
+                        _logger.LogInformation("Auto-generated CustomId: {CustomId} for inventory {InventoryId}", model.CustomId, inventory.Id);
+                    }
+
                     // Check for duplicate CustomId within this inventory
                     if (!string.IsNullOrEmpty(model.CustomId))
                     {
-                        var existingItem = await _context.Items
-                            .FirstOrDefaultAsync(i => i.InventoryId == model.InventoryId && i.CustomId == model.CustomId);
-                        
-                        if (existingItem != null)
+                        var isUnique = await _customIdGenerator.IsCustomIdUniqueAsync(inventory.Id, model.CustomId);
+                        if (!isUnique)
                         {
                             ModelState.AddModelError("CustomId", "An item with this Custom ID already exists in this inventory.");
                             model.CustomFields = GetActiveCustomFieldsForForm(inventory);
+                            model.HasCustomIdFormat = !string.IsNullOrWhiteSpace(inventory.CustomIdFormat);
                             return View(model);
                         }
                     }
@@ -544,6 +657,7 @@ namespace InventoryManagement.Controllers
             // If we got here, something failed
             _logger.LogWarning("CreateItem failed, returning to view. ModelState.IsValid: {IsValid}", ModelState.IsValid);
             model.CustomFields = GetActiveCustomFieldsForForm(inventory);
+            model.HasCustomIdFormat = !string.IsNullOrWhiteSpace(inventory.CustomIdFormat);
             return View(model);
         }
 
@@ -614,12 +728,8 @@ namespace InventoryManagement.Controllers
                     // Check for duplicate CustomId (excluding current item)
                     if (!string.IsNullOrEmpty(model.CustomId) && model.CustomId != item.CustomId)
                     {
-                        var existingItem = await _context.Items
-                            .FirstOrDefaultAsync(i => i.InventoryId == model.InventoryId && 
-                                                i.CustomId == model.CustomId && 
-                                                i.Id != model.Id);
-                        
-                        if (existingItem != null)
+                        var isUnique = await _customIdGenerator.IsCustomIdUniqueAsync(item.InventoryId, model.CustomId, item.Id);
+                        if (!isUnique)
                         {
                             ModelState.AddModelError("CustomId", "An item with this Custom ID already exists in this inventory.");
                             model.CustomFields = GetCustomFieldsForEdit(item, item.Inventory);
@@ -1053,7 +1163,8 @@ namespace InventoryManagement.Controllers
                         Type = "string",
                         Index = i,
                         Name = GetCustomStringName(inventory, i)!,
-                        IsActive = true
+                        IsActive = true,
+                        FieldOrder = GetFieldOrder(inventory, $"string{i}")
                     });
                 }
             }
@@ -1068,7 +1179,8 @@ namespace InventoryManagement.Controllers
                         Type = "text",
                         Index = i,
                         Name = GetCustomTextName(inventory, i)!,
-                        IsActive = true
+                        IsActive = true,
+                        FieldOrder = GetFieldOrder(inventory, $"text{i}")
                     });
                 }
             }
@@ -1083,7 +1195,8 @@ namespace InventoryManagement.Controllers
                         Type = "number",
                         Index = i,
                         Name = GetCustomNumberName(inventory, i)!,
-                        IsActive = true
+                        IsActive = true,
+                        FieldOrder = GetFieldOrder(inventory, $"number{i}")
                     });
                 }
             }
@@ -1098,7 +1211,8 @@ namespace InventoryManagement.Controllers
                         Type = "bool",
                         Index = i,
                         Name = GetCustomBoolName(inventory, i)!,
-                        IsActive = true
+                        IsActive = true,
+                        FieldOrder = GetFieldOrder(inventory, $"bool{i}")
                     });
                 }
             }
@@ -1113,12 +1227,29 @@ namespace InventoryManagement.Controllers
                         Type = "file",
                         Index = i,
                         Name = GetCustomFileName(inventory, i)!,
-                        IsActive = true
+                        IsActive = true,
+                        FieldOrder = GetFieldOrder(inventory, $"file{i}")
                     });
                 }
             }
 
-            return fields;
+            // Sort by FieldOrder (if available), otherwise maintain original order
+            return fields.OrderBy(f => f.FieldOrder ?? int.MaxValue).ToList();
+        }
+
+        // Helper method to get field order from inventory's FieldOrder property
+        private int? GetFieldOrder(Inventory inventory, string fieldKey)
+        {
+            if (string.IsNullOrEmpty(inventory.FieldOrder))
+                return null;
+
+            var fieldOrders = inventory.FieldOrder.Split(',');
+            for (int i = 0; i < fieldOrders.Length; i++)
+            {
+                if (fieldOrders[i].Trim() == fieldKey)
+                    return i;
+            }
+            return null;
         }
 
         private List<ItemCustomFieldViewModel> GetCustomFieldsForEdit(Item item, Inventory inventory)

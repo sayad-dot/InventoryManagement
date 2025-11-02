@@ -11,6 +11,9 @@ namespace InventoryManagement.ViewModels
         [Display(Name = "Custom ID")]
         public string? CustomId { get; set; }
         
+        // Indicates if the inventory has a custom ID format configured
+        public bool HasCustomIdFormat { get; set; }
+        
         // Custom field values
         public List<ItemCustomFieldViewModel> CustomFields { get; set; } = new List<ItemCustomFieldViewModel>();
     }
@@ -37,6 +40,7 @@ namespace InventoryManagement.ViewModels
         public int Index { get; set; }
         public string Name { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public int? FieldOrder { get; set; }
         
         // Field values
         public string? StringValue { get; set; }

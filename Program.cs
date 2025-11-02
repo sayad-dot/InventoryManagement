@@ -53,6 +53,7 @@ builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<ILocalizationService, LocalizationService>();
+builder.Services.AddScoped<CustomIdGeneratorService>();
 
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
