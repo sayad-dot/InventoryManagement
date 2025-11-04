@@ -281,6 +281,7 @@ namespace InventoryManagement.Controllers
                 CategoryId = inventory.CategoryId,
                 ImageUrl = inventory.ImageUrl,
                 IsPublic = inventory.IsPublic,
+                Version = inventory.Version, // Include version for optimistic locking
                 CustomIdFormat = inventory.CustomIdFormat,
                 AvailableCategories = await _context.Categories.OrderBy(c => c.Name).ToListAsync(),
                 FieldOrder = inventory.FieldOrder ?? string.Empty
@@ -335,6 +336,70 @@ namespace InventoryManagement.Controllers
                 ModelState.AddModelError("", "An error occurred while updating the inventory. Please try again.");
                 model.AvailableCategories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
                 return View("Settings", model);
+            }
+        }
+
+        // Auto-save endpoint for Basic Settings (called every 7-10 seconds)
+        [HttpPost]
+        public async Task<IActionResult> AutoSaveBasicSettings([FromBody] EditInventoryViewModel model)
+        {
+            try
+            {
+                var inventory = await _context.Inventories.FindAsync(model.Id);
+                if (inventory == null)
+                {
+                    return Json(new { success = false, message = "Inventory not found" });
+                }
+
+                var user = await _userManager.GetUserAsync(User);
+                if (inventory.CreatorId != user?.Id && !User.IsInRole("Admin"))
+                {
+                    return Json(new { success = false, message = "Access denied" });
+                }
+
+                // Check optimistic locking - compare versions
+                if (model.Version != null && !inventory.Version.SequenceEqual(model.Version))
+                {
+                    return Json(new 
+                    { 
+                        success = false, 
+                        message = "This inventory was modified by another user. Please refresh the page.", 
+                        conflict = true 
+                    });
+                }
+
+                // Update fields
+                inventory.Title = model.Title;
+                inventory.Description = model.Description ?? string.Empty;
+                inventory.CategoryId = model.CategoryId;
+                inventory.ImageUrl = model.ImageUrl;
+                inventory.IsPublic = model.IsPublic;
+                inventory.UpdatedAt = DateTime.UtcNow;
+
+                _context.Inventories.Update(inventory);
+                await _context.SaveChangesAsync();
+
+                // Return new version for next save
+                return Json(new 
+                { 
+                    success = true, 
+                    message = "Auto-saved",
+                    version = Convert.ToBase64String(inventory.Version)
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Json(new 
+                { 
+                    success = false, 
+                    message = "Concurrency conflict. Please refresh the page.", 
+                    conflict = true 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error auto-saving inventory {InventoryId}", model.Id);
+                return Json(new { success = false, message = "Auto-save failed" });
             }
         }
 

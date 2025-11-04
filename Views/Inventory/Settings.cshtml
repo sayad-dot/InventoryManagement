@@ -304,6 +304,213 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    
+    <!-- Auto-save functionality for Basic Info tab -->
+    <script>
+        // ============================================
+        // AUTO-SAVE FUNCTIONALITY
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const basicInfoForm = document.querySelector('#basic form');
+            if (!basicInfoForm) return;
+
+            let hasChanges = false;
+            let autoSaveTimer = null;
+            let currentVersion = '@Convert.ToBase64String(Model.Version ?? Array.Empty<byte>())';
+            let isSaving = false;
+
+            // Create status indicator
+            const statusIndicator = document.createElement('div');
+            statusIndicator.id = 'autoSaveStatus';
+            statusIndicator.className = 'auto-save-status';
+            statusIndicator.innerHTML = '<i class="fas fa-circle"></i> <span class="status-text">Ready</span>';
+            basicInfoForm.querySelector('.btn-primary').insertAdjacentElement('beforebegin', statusIndicator);
+
+            // Track changes in form fields
+            const formFields = basicInfoForm.querySelectorAll('input[name="Title"], textarea[name="Description"], select[name="CategoryId"], input[name="ImageUrl"], input[name="IsPublic"]');
+            
+            formFields.forEach(field => {
+                field.addEventListener('input', function() {
+                    if (!hasChanges) {
+                        hasChanges = true;
+                        showStatus('pending', 'Unsaved changes');
+                    }
+                    resetAutoSaveTimer();
+                });
+                
+                field.addEventListener('change', function() {
+                    if (!hasChanges) {
+                        hasChanges = true;
+                        showStatus('pending', 'Unsaved changes');
+                    }
+                    resetAutoSaveTimer();
+                });
+            });
+
+            function resetAutoSaveTimer() {
+                if (autoSaveTimer) {
+                    clearTimeout(autoSaveTimer);
+                }
+                // Auto-save after 8 seconds of inactivity (between 7-10 seconds as required)
+                autoSaveTimer = setTimeout(autoSave, 8000);
+            }
+
+            async function autoSave() {
+                if (!hasChanges || isSaving) return;
+
+                isSaving = true;
+                showStatus('saving', 'Saving...');
+
+                const formData = {
+                    Id: parseInt(basicInfoForm.querySelector('input[name="Id"]').value),
+                    Title: basicInfoForm.querySelector('input[name="Title"]').value,
+                    Description: basicInfoForm.querySelector('textarea[name="Description"]').value,
+                    CategoryId: basicInfoForm.querySelector('select[name="CategoryId"]').value || null,
+                    ImageUrl: basicInfoForm.querySelector('input[name="ImageUrl"]').value,
+                    IsPublic: basicInfoForm.querySelector('input[name="IsPublic"]').checked,
+                    Version: currentVersion ? Array.from(atob(currentVersion)).map(c => c.charCodeAt(0)) : null
+                };
+
+                try {
+                    const response = await fetch('@Url.Action("AutoSaveBasicSettings", "Inventory")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        hasChanges = false;
+                        currentVersion = result.version;
+                        showStatus('saved', 'Saved');
+                        
+                        // Clear status after 3 seconds
+                        setTimeout(() => {
+                            if (!hasChanges) {
+                                showStatus('ready', 'Ready');
+                            }
+                        }, 3000);
+                    } else if (result.conflict) {
+                        showStatus('error', 'Conflict! Refresh needed');
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        showStatus('error', 'Save failed');
+                        console.error('Auto-save error:', result.message);
+                    }
+                } catch (error) {
+                    showStatus('error', 'Save failed');
+                    console.error('Auto-save error:', error);
+                } finally {
+                    isSaving = false;
+                }
+            }
+
+            function showStatus(status, text) {
+                const indicator = document.getElementById('autoSaveStatus');
+                if (!indicator) return;
+
+                indicator.className = 'auto-save-status status-' + status;
+                indicator.querySelector('.status-text').textContent = text;
+
+                const icon = indicator.querySelector('i');
+                icon.className = status === 'saving' ? 'fas fa-spinner fa-spin' :
+                                status === 'saved' ? 'fas fa-check-circle' :
+                                status === 'error' ? 'fas fa-exclamation-circle' :
+                                status === 'pending' ? 'fas fa-circle' :
+                                'fas fa-circle';
+            }
+
+            // Manual save still works
+            basicInfoForm.addEventListener('submit', function(e) {
+                if (autoSaveTimer) {
+                    clearTimeout(autoSaveTimer);
+                }
+                hasChanges = false;
+            });
+
+            // Save before leaving if there are changes
+            window.addEventListener('beforeunload', function(e) {
+                if (hasChanges && !isSaving) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                    return e.returnValue;
+                }
+            });
+        });
+    </script>
+
+    <!-- Auto-save styling -->
+    <style>
+        .auto-save-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            margin-right: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .auto-save-status.status-ready {
+            color: #6c757d;
+            background-color: #f8f9fa;
+        }
+
+        .auto-save-status.status-pending {
+            color: #856404;
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+        }
+
+        .auto-save-status.status-saving {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border: 1px solid #17a2b8;
+        }
+
+        .auto-save-status.status-saved {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #28a745;
+        }
+
+        .auto-save-status.status-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #dc3545;
+        }
+
+        [data-theme="dark"] .auto-save-status.status-ready {
+            color: #adb5bd;
+            background-color: #2d2d2d;
+        }
+
+        [data-theme="dark"] .auto-save-status.status-pending {
+            color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.15);
+        }
+
+        [data-theme="dark"] .auto-save-status.status-saving {
+            color: #17a2b8;
+            background-color: rgba(23, 162, 184, 0.15);
+        }
+
+        [data-theme="dark"] .auto-save-status.status-saved {
+            color: #28a745;
+            background-color: rgba(40, 167, 69, 0.15);
+        }
+
+        [data-theme="dark"] .auto-save-status.status-error {
+            color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.15);
+        }
+    </style>
+
     <script>
         // Field management JavaScript
         document.addEventListener('DOMContentLoaded', function() {

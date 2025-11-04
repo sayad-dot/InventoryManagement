@@ -71,6 +71,9 @@ namespace InventoryManagement.ViewModels
         public string? ImageUrl { get; set; }
         public bool IsPublic { get; set; }
 
+        // Optimistic locking
+        public byte[]? Version { get; set; }
+
         // Custom ID Format
         public string? CustomIdFormat { get; set; }
 
