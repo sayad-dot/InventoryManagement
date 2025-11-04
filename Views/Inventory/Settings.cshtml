@@ -60,9 +60,16 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label asp-for="Description" class="form-label"></label>
-                                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                                    <label asp-for="Description" class="form-label">
+                                        Description
+                                        <small class="text-muted">(Supports Markdown formatting)</small>
+                                    </label>
+                                    <textarea asp-for="Description" class="form-control markdown-editor" rows="10" id="descriptionEditor"></textarea>
                                     <span asp-validation-for="Description" class="text-danger"></span>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i>
+                                        You can use <strong>Markdown</strong> for formatting: **bold**, *italic*, [links](url), lists, and more!
+                                    </small>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -305,6 +312,146 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     
+    <!-- Markdown Editor Initialization -->
+    <script>
+        // ============================================
+        // MARKDOWN EDITOR SETUP
+        // ============================================
+        let markdownEditor;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const descriptionTextarea = document.getElementById('descriptionEditor');
+            
+            if (descriptionTextarea) {
+                // Initialize EasyMDE
+                markdownEditor = new EasyMDE({
+                    element: descriptionTextarea,
+                    spellChecker: false,
+                    autosave: {
+                        enabled: false // We handle auto-save separately
+                    },
+                    placeholder: "Enter inventory description using Markdown formatting...",
+                    status: ["lines", "words", "cursor"],
+                    toolbar: [
+                        "bold", "italic", "heading", "|",
+                        "quote", "unordered-list", "ordered-list", "|",
+                        "link", "image", "|",
+                        "preview", "side-by-side", "fullscreen", "|",
+                        "guide"
+                    ],
+                    previewRender: function(plainText) {
+                        // Use marked.js to render markdown with DOMPurify for security
+                        const rawHtml = marked.parse(plainText);
+                        return DOMPurify.sanitize(rawHtml);
+                    },
+                    renderingConfig: {
+                        singleLineBreaks: false,
+                        codeSyntaxHighlighting: true,
+                    }
+                });
+
+                // Apply theme to editor
+                applyEditorTheme();
+                
+                // Listen for theme changes
+                const themeObserver = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.attributeName === 'data-theme') {
+                            applyEditorTheme();
+                        }
+                    });
+                });
+                
+                themeObserver.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['data-theme']
+                });
+            }
+        });
+
+        function applyEditorTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const editorContainer = document.querySelector('.EasyMDEContainer');
+            
+            if (editorContainer) {
+                if (isDark) {
+                    editorContainer.classList.add('dark-theme');
+                } else {
+                    editorContainer.classList.remove('dark-theme');
+                }
+            }
+        }
+    </script>
+
+    <!-- Markdown Editor Dark Mode Styling -->
+    <style>
+        .EasyMDEContainer.dark-theme .CodeMirror {
+            background-color: #1e1e1e;
+            color: #e9ecef;
+            border-color: #495057;
+        }
+
+        .EasyMDEContainer.dark-theme .CodeMirror-cursor {
+            border-left-color: #e9ecef;
+        }
+
+        .EasyMDEContainer.dark-theme .editor-toolbar {
+            background-color: #2d2d2d;
+            border-color: #495057;
+        }
+
+        .EasyMDEContainer.dark-theme .editor-toolbar button {
+            color: #e9ecef !important;
+        }
+
+        .EasyMDEContainer.dark-theme .editor-toolbar button:hover,
+        .EasyMDEContainer.dark-theme .editor-toolbar button.active {
+            background-color: #495057;
+            border-color: #6c757d;
+        }
+
+        .EasyMDEContainer.dark-theme .editor-toolbar i.separator {
+            border-left-color: #495057;
+            border-right-color: #495057;
+        }
+
+        .EasyMDEContainer.dark-theme .editor-statusbar {
+            background-color: #2d2d2d;
+            color: #adb5bd;
+            border-color: #495057;
+        }
+
+        .EasyMDEContainer.dark-theme .editor-preview,
+        .EasyMDEContainer.dark-theme .editor-preview-side {
+            background-color: #1e1e1e;
+            color: #e9ecef;
+        }
+
+        .EasyMDEContainer.dark-theme .editor-preview h1,
+        .EasyMDEContainer.dark-theme .editor-preview h2,
+        .EasyMDEContainer.dark-theme .editor-preview h3,
+        .EasyMDEContainer.dark-theme .editor-preview h4,
+        .EasyMDEContainer.dark-theme .editor-preview h5,
+        .EasyMDEContainer.dark-theme .editor-preview h6,
+        .EasyMDEContainer.dark-theme .editor-preview-side h1,
+        .EasyMDEContainer.dark-theme .editor-preview-side h2,
+        .EasyMDEContainer.dark-theme .editor-preview-side h3,
+        .EasyMDEContainer.dark-theme .editor-preview-side h4,
+        .EasyMDEContainer.dark-theme .editor-preview-side h5,
+        .EasyMDEContainer.dark-theme .editor-preview-side h6 {
+            color: #e9ecef;
+        }
+
+        .EasyMDEContainer.dark-theme .CodeMirror-selected {
+            background-color: #495057;
+        }
+
+        /* Make editor fit nicely */
+        .EasyMDEContainer .CodeMirror {
+            min-height: 200px;
+        }
+    </style>
+    
     <!-- Auto-save functionality for Basic Info tab -->
     <script>
         // ============================================
@@ -326,8 +473,8 @@
             statusIndicator.innerHTML = '<i class="fas fa-circle"></i> <span class="status-text">Ready</span>';
             basicInfoForm.querySelector('.btn-primary').insertAdjacentElement('beforebegin', statusIndicator);
 
-            // Track changes in form fields
-            const formFields = basicInfoForm.querySelectorAll('input[name="Title"], textarea[name="Description"], select[name="CategoryId"], input[name="ImageUrl"], input[name="IsPublic"]');
+            // Track changes in form fields - UPDATED to use markdown editor
+            const formFields = basicInfoForm.querySelectorAll('input[name="Title"], select[name="CategoryId"], input[name="ImageUrl"], input[name="IsPublic"]');
             
             formFields.forEach(field => {
                 field.addEventListener('input', function() {
@@ -347,6 +494,17 @@
                 });
             });
 
+            // Track markdown editor changes
+            if (typeof markdownEditor !== 'undefined' && markdownEditor) {
+                markdownEditor.codemirror.on('change', function() {
+                    if (!hasChanges) {
+                        hasChanges = true;
+                        showStatus('pending', 'Unsaved changes');
+                    }
+                    resetAutoSaveTimer();
+                });
+            }
+
             function resetAutoSaveTimer() {
                 if (autoSaveTimer) {
                     clearTimeout(autoSaveTimer);
@@ -364,7 +522,7 @@
                 const formData = {
                     Id: parseInt(basicInfoForm.querySelector('input[name="Id"]').value),
                     Title: basicInfoForm.querySelector('input[name="Title"]').value,
-                    Description: basicInfoForm.querySelector('textarea[name="Description"]').value,
+                    Description: markdownEditor ? markdownEditor.value() : basicInfoForm.querySelector('textarea[name="Description"]').value,
                     CategoryId: basicInfoForm.querySelector('select[name="CategoryId"]').value || null,
                     ImageUrl: basicInfoForm.querySelector('input[name="ImageUrl"]').value,
                     IsPublic: basicInfoForm.querySelector('input[name="IsPublic"]').checked,

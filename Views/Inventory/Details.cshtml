@@ -22,7 +22,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
-                            <p class="card-text">@Model.Description</p>
+                            <div class="card-text markdown-content" id="descriptionContent"></div>
                             
                             <div class="mb-3">
                                 @if (!string.IsNullOrEmpty(Model.CategoryName))
@@ -232,6 +232,34 @@
 </div>
 
 @section Scripts {
+    <!-- Render Markdown Description -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const descriptionContent = document.getElementById('descriptionContent');
+            const rawDescription = @Html.Raw(Json.Serialize(Model.Description ?? ""));
+            
+            console.log('Description container:', descriptionContent);
+            console.log('Raw description:', rawDescription);
+            console.log('Marked library available:', typeof marked !== 'undefined');
+            console.log('DOMPurify library available:', typeof DOMPurify !== 'undefined');
+            
+            if (descriptionContent && rawDescription) {
+                try {
+                    // Parse markdown and sanitize HTML to prevent XSS
+                    const htmlContent = marked.parse(rawDescription);
+                    console.log('Parsed HTML:', htmlContent);
+                    const sanitized = DOMPurify.sanitize(htmlContent);
+                    console.log('Sanitized HTML:', sanitized);
+                    descriptionContent.innerHTML = sanitized;
+                } catch (error) {
+                    console.error('Error rendering markdown:', error);
+                    // Fallback to plain text
+                    descriptionContent.textContent = rawDescription;
+                }
+            }
+        });
+    </script>
+    
     <!-- SignalR Client Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     
