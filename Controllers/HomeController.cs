@@ -22,62 +22,66 @@ namespace InventoryManagement.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // Create realistic dummy data
+            // Fetch latest inventories from database (ordered by creation date, newest first)
+            var latestInventories = await _context.Inventories
+                .Include(i => i.Creator)
+                .Include(i => i.Items)
+                .OrderByDescending(i => i.CreatedAt)
+                .Take(10)
+                .Select(i => new Inventory
+                {
+                    Id = i.Id,
+                    Title = i.Title,
+                    Description = i.Description,
+                    ImageUrl = i.ImageUrl,
+                    CreatedAt = i.CreatedAt,
+                    Creator = i.Creator,
+                    ItemCount = i.Items.Count
+                })
+                .ToListAsync();
+
+            // Fetch top 5 most popular inventories (based on number of items)
+            var popularInventories = await _context.Inventories
+                .Include(i => i.Creator)
+                .Include(i => i.Items)
+                .OrderByDescending(i => i.Items.Count)
+                .Take(5)
+                .Select(i => new Inventory
+                {
+                    Id = i.Id,
+                    Title = i.Title,
+                    Description = i.Description,
+                    ImageUrl = i.ImageUrl,
+                    CreatedAt = i.CreatedAt,
+                    Creator = i.Creator,
+                    ItemCount = i.Items.Count
+                })
+                .ToListAsync();
+
+            // Fetch all unique tags from the database
+            var tags = await _context.Set<Tag>()
+                .OrderBy(t => t.Name)
+                .Select(t => t.Name)
+                .ToListAsync();
+
+            // Calculate statistics
+            var totalInventories = await _context.Inventories.CountAsync();
+            var totalItems = await _context.Items.CountAsync();
+            var totalUsers = await _context.Users.CountAsync();
+            var totalCategories = await _context.Set<Category>()
+                .CountAsync();
+
             var viewModel = new HomeViewModel
             {
-                LatestInventories = new List<Inventory>
-                {
-                    new Inventory { 
-                        Id = 1, 
-                        Title = "Office Equipment", 
-                        Description = "Computers, monitors, printers and other office equipment",
-                        ItemCount = 47,
-                        CreatedAt = DateTime.Now.AddDays(-1),
-                        Creator = new ApplicationUser { UserName = "admin", FullName = "System Admin" }
-                    },
-                    new Inventory { 
-                        Id = 2, 
-                        Title = "Library Books", 
-                        Description = "Technical books and programming references",
-                        ItemCount = 128,
-                        CreatedAt = DateTime.Now.AddDays(-2),
-                        Creator = new ApplicationUser { UserName = "librarian", FullName = "Sarah Johnson" }
-                    },
-                    new Inventory { 
-                        Id = 3, 
-                        Title = "Furniture Inventory", 
-                        Description = "Office chairs, desks, and conference room furniture",
-                        ItemCount = 89,
-                        CreatedAt = DateTime.Now.AddDays(-3),
-                        Creator = new ApplicationUser { UserName = "facilities", FullName = "Mike Wilson" }
-                    }
-                },
-                PopularInventories = new List<Inventory>
-                {
-                    new Inventory { 
-                        Id = 1, 
-                        Title = "Office Equipment", 
-                        Description = "Computers, monitors, printers and other office equipment",
-                        ItemCount = 47,
-                        CreatedAt = DateTime.Now.AddDays(-1),
-                        Creator = new ApplicationUser { UserName = "admin", FullName = "System Admin" }
-                    },
-                    new Inventory { 
-                        Id = 6, 
-                        Title = "Electronics Lab", 
-                        Description = "Test equipment and electronic components",
-                        ItemCount = 156,
-                        CreatedAt = DateTime.Now.AddDays(-10),
-                        Creator = new ApplicationUser { UserName = "lab_tech", FullName = "Emily Chen" }
-                    }
-                },
-                Tags = new List<string> 
-                { 
-                    "equipment", "books", "furniture", "electronics", 
-                    "vehicles", "tools", "machinery", "supplies"
-                }
+                LatestInventories = latestInventories,
+                PopularInventories = popularInventories,
+                Tags = tags,
+                TotalInventories = totalInventories,
+                TotalItems = totalItems,
+                TotalUsers = totalUsers,
+                TotalCategories = totalCategories
             };
 
             // Add user-specific welcome message if authenticated

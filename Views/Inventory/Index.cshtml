@@ -1,0 +1,143 @@
+@model IEnumerable<InventoryManagement.ViewModels.InventoryViewModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = Localizer["All Inventories"];
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>@Localizer["All Inventories"]</h2>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>@Localizer["Create New Inventory"]
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            @Localizer["No inventories found. Be the first to create one!"]
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>@Localizer["Title"]</th>
+                                <th>@Localizer["Category"]</th>
+                                <th>@Localizer["Creator"]</th>
+                                <th>@Localizer["Items"]</th>
+                                <th>@Localizer["Tags"]</th>
+                                <th>@Localizer["Status"]</th>
+                                <th>@Localizer["Created"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var inventory in Model)
+                            {
+                                <tr style="cursor: pointer;" onclick="window.location='@Url.Action("Details", "Inventory", new { id = inventory.Id })'">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(inventory.ImageUrl))
+                                            {
+                                                <img src="@inventory.ImageUrl" alt="@inventory.Title" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-primary rounded d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                                    <i class="fas fa-box text-white"></i>
+                                                </div>
+                                            }
+                                            <div>
+                                                <h6 class="mb-0">@inventory.Title</h6>
+                                                <small class="text-muted">@(string.IsNullOrEmpty(inventory.Description) || inventory.Description.Length <= 60 ? inventory.Description : inventory.Description.Substring(0, 60) + "...")</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (!string.IsNullOrEmpty(inventory.CategoryName))
+                                        {
+                                            <span class="badge bg-secondary">@inventory.CategoryName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark">@Localizer["Other"]</span>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        <small>@inventory.CreatorName</small>
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="badge bg-info rounded-pill">@inventory.ItemCount</span>
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (inventory.Tags != null && inventory.Tags.Any())
+                                        {
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach (var tag in inventory.Tags.Take(3))
+                                                {
+                                                    <span class="badge bg-light text-dark border">@tag</span>
+                                                }
+                                                @if (inventory.Tags.Count > 3)
+                                                {
+                                                    <span class="badge bg-light text-dark border">+@(inventory.Tags.Count - 3)</span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">-</small>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (inventory.IsPublic)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-globe me-1"></i>@Localizer["Public"]
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-lock me-1"></i>@Localizer["Private"]
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        <small class="text-muted">@inventory.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

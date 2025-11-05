@@ -41,6 +41,40 @@ namespace InventoryManagement.Controllers
             _customIdGenerator = customIdGenerator;
         }
 
+        // Public action - accessible by everyone (including non-authenticated users)
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var inventories = await _context.Inventories
+                .Include(i => i.Creator)
+                .Include(i => i.Category)
+                .Include(i => i.InventoryTags)
+                    .ThenInclude(it => it.Tag)
+                .Include(i => i.Items)
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync();
+
+            var viewModel = inventories.Select(i => new InventoryViewModel
+            {
+                Id = i.Id,
+                Title = i.Title,
+                Description = i.Description,
+                CreatorName = i.Creator.FullName,
+                CreatorId = i.CreatorId,
+                CategoryName = i.Category?.Name,
+                ImageUrl = i.ImageUrl,
+                IsPublic = i.IsPublic,
+                CreatedAt = i.CreatedAt,
+                UpdatedAt = i.UpdatedAt,
+                ItemCount = i.Items.Count,
+                Tags = i.InventoryTags.Select(it => it.Tag.Name).ToList(),
+                IsOwner = User.Identity?.IsAuthenticated == true && i.CreatorId == _userManager.GetUserId(User)
+            }).ToList();
+
+            return View(viewModel);
+        }
+
         [HttpGet]
         public async Task<IActionResult> MyInventories()
         {

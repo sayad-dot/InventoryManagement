@@ -25,7 +25,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h5 class="card-title">@Localizer["TotalInventories"]</h5>
-                            <h2 class="mb-0">15</h2>
+                            <h2 class="mb-0">@Model.TotalInventories</h2>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-boxes fa-2x"></i>
@@ -40,7 +40,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h5 class="card-title">@Localizer["TotalItems"]</h5>
-                            <h2 class="mb-0">658</h2>
+                            <h2 class="mb-0">@Model.TotalItems</h2>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-cube fa-2x"></i>
@@ -55,7 +55,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h5 class="card-title">@Localizer["ActiveUsers"]</h5>
-                            <h2 class="mb-0">24</h2>
+                            <h2 class="mb-0">@Model.TotalUsers</h2>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-users fa-2x"></i>
@@ -70,7 +70,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h5 class="card-title">@Localizer["Categories"]</h5>
-                            <h2 class="mb-0">8</h2>
+                            <h2 class="mb-0">@Model.TotalCategories</h2>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-tags fa-2x"></i>
@@ -104,17 +104,24 @@
                             <tbody>
                                 @foreach (var inventory in Model.LatestInventories)
                                 {
-                                    <tr style="cursor: pointer;" onclick="window.location='#'">
+                                    <tr style="cursor: pointer;" onclick="window.location='@Url.Action("Details", "Inventory", new { id = inventory.Id })'">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-shrink-0">
-                                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                        <i class="fas fa-box text-white"></i>
-                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(inventory.ImageUrl))
+                                                    {
+                                                        <img src="@inventory.ImageUrl" alt="@inventory.Title" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-box text-white"></i>
+                                                        </div>
+                                                    }
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <h6 class="mb-0">@inventory.Title</h6>
-                                                    <small class="text-muted">@inventory.Description</small>
+                                                    <small class="text-muted">@(string.IsNullOrEmpty(inventory.Description) || inventory.Description.Length <= 50 ? inventory.Description : inventory.Description.Substring(0, 50) + "...")</small>
                                                 </div>
                                             </div>
                                         </td>
@@ -134,7 +141,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-muted text-center">
-                    <a href="#" class="btn btn-outline-primary btn-sm">View All Inventories</a>
+                    <a href="@Url.Action("Index", "Inventory")" class="btn btn-outline-primary btn-sm">View All Inventories</a>
                 </div>
             </div>
         </div>
@@ -160,17 +167,24 @@
                             <tbody>
                                 @foreach (var inventory in Model.PopularInventories)
                                 {
-                                    <tr style="cursor: pointer;" onclick="window.location='#'">
+                                    <tr style="cursor: pointer;" onclick="window.location='@Url.Action("Details", "Inventory", new { id = inventory.Id })'">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-shrink-0">
-                                                    <div class="bg-success rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                        <i class="fas fa-star text-white"></i>
-                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(inventory.ImageUrl))
+                                                    {
+                                                        <img src="@inventory.ImageUrl" alt="@inventory.Title" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-success rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-star text-white"></i>
+                                                        </div>
+                                                    }
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <h6 class="mb-0">@inventory.Title</h6>
-                                                    <small class="text-muted">@inventory.Description</small>
+                                                    <small class="text-muted">@(string.IsNullOrEmpty(inventory.Description) || inventory.Description.Length <= 50 ? inventory.Description : inventory.Description.Substring(0, 50) + "...")</small>
                                                 </div>
                                             </div>
                                         </td>
@@ -203,12 +217,19 @@
                     <h5 class="card-title mb-0">Explore by Tags</h5>
                 </div>
                 <div class="card-body">
-                    <div class="tag-cloud text-center">
-                        @foreach (var tag in Model.Tags)
-                        {
-                            <span class="badge bg-light text-dark border me-2 mb-2 p-2 tag-item">@tag</span>
-                        }
-                    </div>
+                    @if (Model.Tags.Any())
+                    {
+                        <div class="tag-cloud text-center">
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <a href="@Url.Action("Index", "Search", new { query = tag })" class="badge bg-light text-dark border me-2 mb-2 p-2 tag-item text-decoration-none">@tag</a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">No tags available yet. Tags will appear when inventories are created with tags.</p>
+                    }
                 </div>
             </div>
         </div>
