@@ -165,7 +165,7 @@ if (!app.Environment.IsDevelopment())
 // Add security headers middleware
 app.Use(async (context, next) =>
 {
-    // Set a clean Permissions-Policy header
+    // Set a clean Permissions-Policy header (removed bluetooth as it's deprecated)
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
     await next();
 });
