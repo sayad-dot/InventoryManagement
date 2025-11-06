@@ -398,3 +398,4 @@ config.json
 *.p12
 
 ## End of https://www.toptal.com/developers/gitignore/api/dotnet,visualstudiocodeDEPLOYMENT.md
+.azure

@@ -22,6 +22,20 @@ param principalType string
 @description('PostgreSQL administrator password')
 param postgresAdminPassword string
 
+@description('Google OAuth Client ID')
+param googleClientId string = ''
+
+@secure()
+@description('Google OAuth Client Secret')
+param googleClientSecret string = ''
+
+@description('Facebook OAuth App ID')
+param facebookAppId string = ''
+
+@secure()
+@description('Facebook OAuth App Secret')
+param facebookAppSecret string = ''
+
 // Tags that should be applied to all resources.
 // 
 // Note that 'azd-service-name' tags should be applied separately to service host resources.
@@ -48,6 +62,10 @@ module resources 'resources.bicep' = {
     principalType: principalType
     inventoryManagementExists: inventoryManagementExists
     postgresAdminPassword: postgresAdminPassword
+    googleClientId: googleClientId
+    googleClientSecret: googleClientSecret
+    facebookAppId: facebookAppId
+    facebookAppSecret: facebookAppSecret
   }
 }
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT

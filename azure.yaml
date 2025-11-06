@@ -5,7 +5,7 @@ metadata:
     template: azd-init@1.20.3
 services:
     inventory-management:
-        project: .
+        project: ./InventoryManagement.csproj
         host: containerapp
         language: dotnet
 resources:

@@ -52,23 +52,11 @@ namespace InventoryManagement.Migrations
                 name: "IX_Discussions_UserId",
                 table: "Discussions",
                 column: "UserId");
-
-            // Add unique constraint to existing ItemLikes table
-            migrationBuilder.CreateIndex(
-                name: "IX_ItemLikes_ItemId_UserId",
-                table: "ItemLikes",
-                columns: new[] { "ItemId", "UserId" },
-                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Drop unique constraint from ItemLikes
-            migrationBuilder.DropIndex(
-                name: "IX_ItemLikes_ItemId_UserId",
-                table: "ItemLikes");
-
             // Drop Discussions table
             migrationBuilder.DropTable(
                 name: "Discussions");

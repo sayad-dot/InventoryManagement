@@ -20,6 +20,16 @@ var resourceToken = uniqueString(subscription().id, resourceGroup().id, location
 @secure()
 param postgresAdminPassword string
 
+// Google OAuth Configuration
+param googleClientId string = ''
+@secure()
+param googleClientSecret string = ''
+
+// Facebook OAuth Configuration
+param facebookAppId string = ''
+@secure()
+param facebookAppSecret string = ''
+
 // PostgreSQL Database
 module postgresDB './modules/postgres.bicep' = {
   name: 'postgres-database'
@@ -131,6 +141,22 @@ module inventoryManagement 'br/public:avm/res/app/container-app:0.8.0' = {
           {
             name: 'ASPNETCORE_ENVIRONMENT'
             value: 'Production'
+          }
+          {
+            name: 'Authentication__Google__ClientId'
+            value: googleClientId
+          }
+          {
+            name: 'Authentication__Google__ClientSecret'
+            value: googleClientSecret
+          }
+          {
+            name: 'Authentication__Facebook__AppId'
+            value: facebookAppId
+          }
+          {
+            name: 'Authentication__Facebook__AppSecret'
+            value: facebookAppSecret
           }
         ]
       }

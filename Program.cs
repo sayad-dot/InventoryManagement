@@ -9,8 +9,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure forwarded headers for Azure Container Apps
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Add localization services
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -143,6 +152,9 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
+// Use forwarded headers FIRST (before any other middleware)
+app.UseForwardedHeaders();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -153,7 +165,7 @@ if (!app.Environment.IsDevelopment())
 // Add security headers middleware
 app.Use(async (context, next) =>
 {
-    // Set a clean Permissions-Policy header without bluetooth
+    // Set a clean Permissions-Policy header
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
     await next();
 });
