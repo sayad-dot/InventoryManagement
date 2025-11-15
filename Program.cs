@@ -64,6 +64,10 @@ builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<ILocalizationService, LocalizationService>();
 builder.Services.AddScoped<CustomIdGeneratorService>();
 
+// Add Support Ticket services
+builder.Services.AddHttpClient<IOneDriveService, OneDriveService>();
+builder.Services.AddScoped<ISupportTicketService, SupportTicketService>();
+
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

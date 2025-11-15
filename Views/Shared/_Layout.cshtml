@@ -155,11 +155,77 @@
                     &copy; 2024 - Inventory Management
                 </div>
                 <div class="col-md-6 text-end">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a href="#" class="text-decoration-none me-3" id="supportTicketLink">
+                            <i class="fas fa-life-ring me-1"></i>@Localizer["Support"]
+                        </a>
+                    }
                     <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-decoration-none">@Localizer["Privacy"]</a>
                 </div>
             </div>
         </div>
     </footer>
+
+    <!-- Support Ticket Modal -->
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="modal fade" id="supportTicketModal" tabindex="-1" aria-labelledby="supportTicketModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="supportTicketModalLabel">
+                            <i class="fas fa-life-ring me-2"></i>Create Support Ticket
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="supportTicketForm">
+                            @Html.AntiForgeryToken()
+                            
+                            <div class="mb-3">
+                                <label for="ticketSummary" class="form-label">Issue Summary <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="ticketSummary" name="summary" rows="4" 
+                                          placeholder="Please describe your issue or question..." 
+                                          required maxlength="500"></textarea>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Be as specific as possible to help us assist you better.
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="ticketPriority" class="form-label">Priority <span class="text-danger">*</span></label>
+                                <select class="form-select" id="ticketPriority" name="priority" required>
+                                    <option value="">Select priority...</option>
+                                    <option value="Low">Low - General question or minor issue</option>
+                                    <option value="Average" selected>Average - Normal issue affecting work</option>
+                                    <option value="High">High - Critical issue blocking work</option>
+                                </select>
+                            </div>
+
+                            <input type="hidden" id="ticketInventoryTitle" name="inventoryTitle" />
+                            <input type="hidden" id="ticketPageUrl" name="pageUrl" />
+
+                            <div id="ticketContextInfo" class="alert alert-info small mb-3" style="display: none;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>Context:</strong> <span id="contextDetails"></span>
+                            </div>
+
+                            <div id="ticketAlert" class="alert" style="display: none;"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" id="submitTicketBtn">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Ticket
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Bootstrap & jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -276,7 +342,157 @@
     .input-group.position-relative {
         position: relative;
     }
+    
+    /* Support Ticket Modal Styles */
+    #supportTicketModal .modal-content {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+    #supportTicketModal .modal-header {
+        border-bottom-color: var(--border-color);
+    }
+    #supportTicketModal .modal-footer {
+        border-top-color: var(--border-color);
+    }
+    #supportTicketModal .btn-close {
+        filter: var(--bs-btn-close-filter, none);
+    }
+    [data-theme="dark"] #supportTicketModal .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    #supportTicketLink {
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+    #supportTicketLink:hover {
+        color: var(--primary-color);
+    }
 </style>
+
+<script>
+    // Support Ticket Modal Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const supportTicketLink = document.getElementById('supportTicketLink');
+        const supportTicketModal = document.getElementById('supportTicketModal');
+        const submitTicketBtn = document.getElementById('submitTicketBtn');
+        const supportTicketForm = document.getElementById('supportTicketForm');
+        const ticketAlert = document.getElementById('ticketAlert');
+        
+        if (supportTicketLink && supportTicketModal) {
+            const modal = new bootstrap.Modal(supportTicketModal);
+            
+            // Open modal when clicking support link
+            supportTicketLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Capture current page context
+                const pageUrl = window.location.href;
+                const pageTitle = document.title;
+                
+                // Try to extract inventory title if on inventory page
+                let inventoryTitle = null;
+                const inventoryNameElement = document.querySelector('h1, h2, .inventory-title');
+                if (inventoryNameElement) {
+                    inventoryTitle = inventoryNameElement.textContent.trim();
+                }
+                
+                // Set hidden fields
+                document.getElementById('ticketPageUrl').value = pageUrl;
+                document.getElementById('ticketInventoryTitle').value = inventoryTitle || '';
+                
+                // Show context info if available
+                const contextInfo = document.getElementById('ticketContextInfo');
+                const contextDetails = document.getElementById('contextDetails');
+                if (inventoryTitle) {
+                    contextDetails.textContent = `Inventory: "${inventoryTitle}"`;
+                    contextInfo.style.display = 'block';
+                } else {
+                    contextDetails.textContent = `Page: ${pageTitle}`;
+                    contextInfo.style.display = 'block';
+                }
+                
+                // Reset form
+                supportTicketForm.reset();
+                ticketAlert.style.display = 'none';
+                document.getElementById('ticketPriority').value = 'Average';
+                
+                modal.show();
+            });
+            
+            // Submit ticket
+            submitTicketBtn.addEventListener('click', function() {
+                if (!supportTicketForm.checkValidity()) {
+                    supportTicketForm.reportValidity();
+                    return;
+                }
+                
+                const submitBtn = this;
+                const originalText = submitBtn.innerHTML;
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Submitting...';
+                ticketAlert.style.display = 'none';
+                
+                // Prepare form data
+                const formData = new FormData(supportTicketForm);
+                
+                // Submit via AJAX
+                fetch('/Support/CreateTicket', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        ticketAlert.className = 'alert alert-success';
+                        ticketAlert.innerHTML = `
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Success!</strong> ${data.message}
+                            <br><small>Ticket ID: #${data.ticketId}</small>
+                        `;
+                        ticketAlert.style.display = 'block';
+                        
+                        // Reset form
+                        supportTicketForm.reset();
+                        
+                        // Close modal after 2 seconds
+                        setTimeout(() => {
+                            modal.hide();
+                            ticketAlert.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        // Show error message
+                        ticketAlert.className = 'alert alert-danger';
+                        ticketAlert.innerHTML = `
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Error:</strong> ${data.message}
+                        `;
+                        ticketAlert.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting ticket:', error);
+                    ticketAlert.className = 'alert alert-danger';
+                    ticketAlert.innerHTML = `
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Error:</strong> Failed to submit ticket. Please try again.
+                    `;
+                    ticketAlert.style.display = 'block';
+                })
+                .finally(() => {
+                    // Restore button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
+            });
+        }
+    });
+</script>
 
 </body>
 </html>

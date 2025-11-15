@@ -19,6 +19,7 @@ namespace InventoryManagement.Data
         public DbSet<InventoryTag> InventoryTags { get; set; }
         public DbSet<Discussion> Discussions { get; set; }
         public DbSet<ItemLike> ItemLikes { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

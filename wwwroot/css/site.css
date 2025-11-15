@@ -742,3 +742,193 @@ body {
 [data-theme="dark"] .table-responsive {
     background-color: transparent !important;
 }
+
+/* ========================================
+   SUPPORT TICKET MODAL STYLES
+   ======================================== */
+
+/* Support link in footer */
+#supportTicketLink {
+    color: var(--text-secondary);
+    transition: color 0.3s ease, transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+#supportTicketLink:hover {
+    color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+#supportTicketLink i {
+    transition: transform 0.3s ease;
+}
+
+#supportTicketLink:hover i {
+    transform: rotate(360deg);
+}
+
+/* Modal styling for both themes */
+#supportTicketModal .modal-content {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+#supportTicketModal .modal-header {
+    border-bottom-color: var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+#supportTicketModal .modal-footer {
+    border-top-color: var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+#supportTicketModal .modal-title {
+    color: var(--text-primary);
+}
+
+#supportTicketModal .form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+#supportTicketModal .form-control,
+#supportTicketModal .form-select {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+#supportTicketModal .form-control:focus,
+#supportTicketModal .form-select:focus {
+    background-color: var(--bg-primary);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+#supportTicketModal .form-text {
+    color: var(--text-secondary);
+}
+
+/* Dark theme close button fix */
+[data-theme="dark"] #supportTicketModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Alert styling inside modal */
+#supportTicketModal .alert {
+    border-color: var(--border-color);
+}
+
+#supportTicketModal .alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.3);
+    color: var(--info-color);
+}
+
+#supportTicketModal .alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-color: rgba(25, 135, 84, 0.3);
+    color: var(--success-color);
+}
+
+#supportTicketModal .alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: var(--danger-color);
+}
+
+/* Button hover effects */
+#supportTicketModal .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+#supportTicketModal .btn-secondary:hover {
+    transform: translateY(-1px);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fa-spinner.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Smooth transitions */
+#supportTicketModal .modal-content,
+#supportTicketModal .form-control,
+#supportTicketModal .form-select,
+#supportTicketModal .btn {
+    transition: all 0.3s ease;
+}
+
+/* Backdrop for better focus */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Textarea styling */
+#ticketSummary {
+    resize: vertical;
+    min-height: 100px;
+}
+
+#ticketSummary::-webkit-scrollbar {
+    width: 8px;
+}
+
+#ticketSummary::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+#ticketSummary::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+#ticketSummary::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Context info badge */
+#ticketContextInfo {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Required field asterisk */
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+/* Select dropdown arrow fix for dark theme */
+[data-theme="dark"] .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e9ecef' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+}
+
