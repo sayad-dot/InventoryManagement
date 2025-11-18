@@ -68,6 +68,17 @@ builder.Services.AddScoped<CustomIdGeneratorService>();
 builder.Services.AddHttpClient<IOneDriveService, OneDriveService>();
 builder.Services.AddScoped<ISupportTicketService, SupportTicketService>();
 
+// Add Salesforce services
+builder.Services.AddHttpClient<ISalesforceService, SalesforceService>();
+
+// Add session services for OAuth state management
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -182,6 +193,9 @@ var localizationOptions = app.Services.GetService<IOptions<RequestLocalizationOp
 app.UseRequestLocalization(localizationOptions!.Value);
 
 app.UseRouting();
+
+// Add Session middleware (must be before Authentication)
+app.UseSession();
 
 // Add Authentication & Authorization middleware
 app.UseAuthentication();
